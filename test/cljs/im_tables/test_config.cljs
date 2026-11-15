@@ -1,5 +1,5 @@
 (ns im-tables.test-config
-  "Which InterMine the unit tests query. The defaults are the live FlyMine, as upstream.
+  "Which InterMine the unit tests query. The defaults are the live HumanMine (upstream used FlyMine).
   Under shadow-cljs (the :test build) they can be overridden without editing sources:
 
       IM_TABLES_SERVICE_ROOT=http://localhost:8090/humanmine \\
@@ -10,7 +10,7 @@
   query anonymously, so no token is needed.")
 
 ;; Web service root of the mine, without /service.
-(goog-define SERVICE-ROOT "https://www.flymine.org/flymine")
+(goog-define SERVICE-ROOT "https://www.humanmine.org/humanmine")
 
 ;; Mine namespace, only used to build report-page links (:settings :links :vocab).
-(goog-define MINE-NAME "flymine")
+(goog-define MINE-NAME "humanmine")

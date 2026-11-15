@@ -28,7 +28,7 @@
 
 ;; The assertions below check what im-tables does with a response (rows, columns, sort
 ;; order), not which genes a particular mine holds, so the suite passes against any mine with
-;; genes whose symbol contains "abc" (FlyMine, HumanMine...). See test_config.cljs.
+;; genes whose symbol contains "abc" (HumanMine, FlyMine...). See test_config.cljs.
 
 (defn- rows
   "The rows of the current page, in display order (:results is a map keyed by row index)."

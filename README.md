@@ -20,7 +20,7 @@ There are two ways to render an im-table. You can mount the component passing a 
 
 ;; In the `:component-did-mount` lifecycle or other suitable place.
 (re-frame.core/dispatch [:im-tables/load [:some-location :within-app-db :to-store-values]
-                         {:service {:root "beta.flymine.org/beta"
+                         {:service {:root "www.humanmine.org/humanmine"
                                     :model some-intermine-model         ; Optional
                                     :summary-fields some-summary-fields ; Optional
                                     }
@@ -41,7 +41,7 @@ The other way is to pass in the entire map to have the im-table dispatch the *lo
 
 ```clojure
 [im-tables.core/table {:location [:some-location :within-app-db :to-store-values]
-                       :service {:root "beta.flymine.org/beta"
+                       :service {:root "www.humanmine.org/humanmine"
                                  :model some-intermine-model         ; Optional
                                  :summary-fields some-summary-fields ; Optional
                                  }
@@ -156,7 +156,7 @@ clojure -M:fmt check                      # cljfmt (clojure -M:fmt fix to reform
 clojure -T:build css                      # resources/public/css/im-tables.css
 npx shadow-cljs watch app                 # demo page on http://localhost:3448 with hot-reloading
 npx shadow-cljs release app               # advanced compile of the whole library
-npx shadow-cljs compile test && node out/test.js   # unit tests (they query the live FlyMine)
+npx shadow-cljs compile test && node out/test.js   # unit tests (they query the live HumanMine)
 clojure -T:build jar                      # target/im-tables-<version>.jar: sources + compiled css
 clojure -T:build install                  # the same, installed into ~/.m2
 clojure -T:build:deploy deploy            # to Clojars (needs CLOJARS_USERNAME / CLOJARS_PASSWORD)

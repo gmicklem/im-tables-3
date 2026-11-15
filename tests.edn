@@ -7,5 +7,5 @@
           ;; environment variables and defaults as the shadow-cljs :test build.
           :cljs/compiler-options
           {:closure-defines
-           {im-tables.test-config/SERVICE-ROOT #or [#env IM_TABLES_SERVICE_ROOT "https://www.flymine.org/flymine"]
-            im-tables.test-config/MINE-NAME #or [#env IM_TABLES_MINE_NAME "flymine"]}}}]}
+           {im-tables.test-config/SERVICE-ROOT #or [#env IM_TABLES_SERVICE_ROOT "https://www.humanmine.org/humanmine"]
+            im-tables.test-config/MINE-NAME #or [#env IM_TABLES_MINE_NAME "humanmine"]}}}]}
