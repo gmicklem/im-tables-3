@@ -18,7 +18,7 @@
 ;;       xhr2 npm package as a polyfill.
 ;;
 ;; React, react-select and highlight.js come from
-;; npm (package.json, the same versions the cljsjs jars carried); the shim/ directory (deps.edn
+;; npm (package.json); the shim/ directory (deps.edn
 ;; :cljs alias) provides the cljsjs.* namespaces that the sources still require.
 {:deps     {:aliases [:cljs :cljs-dev :test]}
 

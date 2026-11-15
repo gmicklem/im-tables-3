@@ -9,15 +9,17 @@
                  [reagent "1.2.0"]
                  ;; reagent 1.1+ no longer brings React: lein builds take it from cljsjs
                  ;; (deps.edn builds from npm, see package.json).
-                 [cljsjs/react "16.13.0-0"]
-                 [cljsjs/react-dom "16.13.0-0"]
-                 [cljsjs/react-dom-server "16.13.0-0"]
+                 [cljsjs/react "18.3.1-1"]
+                 ;; also provides react-dom/client and react-dom/server
+                 [cljsjs/react-dom "18.3.1-1"]
                  [cljsjs/highlight "9.12.0-2"]
                  [joshkh/ctrlz "0.3.0"]
                  [binaryage/oops "0.7.0"]
                  [inflections "0.13.2"]
                  [org.intermine/imcljs "1.6.0"]
-                 [cljsjs/react-select "2.4.4-0"]
+                 ;; There is no cljsjs build of react-select 5 (deps.edn builds use npm 5.10.2),
+                 ;; so lein builds stay on 2.4.4, which still runs on React 18.
+                 [cljsjs/react-select "2.4.4-0" :exclusions [cljsjs/react cljsjs/react-dom]]
                  [com.andrewmcveigh/cljs-time "0.5.2"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]

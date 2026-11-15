@@ -8,9 +8,9 @@
   },
   "dependencies": {
     "highlight.js": "9.12.0",
-    "react": "16.13.1",
-    "react-dom": "16.13.1",
-    "react-select": "2.4.4"
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-select": "5.10.2"
   },
   "devDependencies": {
     "chokidar-cli": "^2.1.0",
