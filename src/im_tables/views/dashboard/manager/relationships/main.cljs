@@ -2,7 +2,6 @@
   (:require [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :refer [atom]]
             [clojure.string :refer [join includes?]]
-            [inflections.core :refer [plural]]
             [imcljs.path :as path]
             [oops.core :refer [ocall oget]]))
 
