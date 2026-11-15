@@ -1,0 +1,7 @@
+;; Read by `clojure -M:fmt` (cljfmt 0.12). project.clj has the equivalent :cljfmt map for
+;; lein-cljfmt 0.6.1. The consecutive-blank-lines rule is off so that both versions accept
+;; the existing sources unchanged. shim/ is formatted too; dev/ is the figwheel launcher.
+{:extra-indents {wait-for [[:inner 0]]
+                 after-load [[:inner 0]]}
+ :remove-consecutive-blank-lines? false
+ :paths ["src" "test" "dev" "shim" "build.clj"]}

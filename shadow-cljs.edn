@@ -1,0 +1,33 @@
+;; Builds and tests for im-tables. The library itself is compiled by its consumers; the :app
+;; build is the standalone demo page (resources/public/index.html), the old lein "dev"/"min"
+;; cljsbuild builds.
+;;
+;;   npm ci
+;;   clojure -T:build css                    ; resources/public/css/im-tables.css (lessc)
+;;   npx shadow-cljs watch app               ; demo page on http://localhost:3448 (hot reload)
+;;   npx shadow-cljs release app             ; advanced compile of the whole library (gate step)
+;;
+;;   npx shadow-cljs compile test && node out/test.js
+;;       the unit tests (what scripts/gate-im-tables.sh runs). They send read-only queries
+;;       to the live FlyMine (https://www.flymine.org/flymine), no Biotestmine is needed.
+;;       Node has no XMLHttpRequest, which cljs-http needs: im-tables.test-utils installs the
+;;       xhr2 npm package as a polyfill.
+;;
+;; React, react-select, react-day-picker, react-transition-group and highlight.js come from
+;; npm (package.json, the same versions the cljsjs jars carried); the shim/ directory (deps.edn
+;; :cljs alias) provides the cljsjs.* namespaces that the sources still require.
+{:deps     {:aliases [:cljs :cljs-dev :test]}
+
+ :dev-http {3448 "resources/public"}
+
+ :builds
+ {:app  {:target           :browser
+         :output-dir       "resources/public/js/compiled"
+         :asset-path       "js/compiled"
+         :modules          {:app {:entries [im-tables.core]}}
+         :devtools         {:after-load im-tables.core/mount-root
+                            :preloads   [devtools.preload]}}
+
+  :test {:target    :node-test
+         :output-to "out/test.js"
+         :ns-regexp "-test$"}}}

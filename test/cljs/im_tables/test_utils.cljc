@@ -5,6 +5,13 @@
             #?(:cljs [cljs.core.async :refer [chan put!]]))
   #?(:cljs (:require-macros [im-tables.test-utils])))
 
+;; cljs-http uses goog.net.XhrIo, which needs XMLHttpRequest. Browsers have it, node (the
+;; shadow-cljs :node-test build, see shadow-cljs.edn) does not, so under node use the xhr2
+;; npm package (a devDependency, see package.json).
+#?(:cljs
+   (when (and (exists? js/process) (not (exists? js/XMLHttpRequest)))
+     (set! js/XMLHttpRequest (js/require "xhr2"))))
+
 ;; Tips for writing tests:
 ;; https://github.com/intermine/bluegenes/blob/dev/docs/developing.md
 

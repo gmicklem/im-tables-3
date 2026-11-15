@@ -17,3 +17,6 @@ node_modules
 /.lein-repl-history
 /.lsp/
 /figwheel_server.log
+/.cpcache
+/.shadow-cljs
+/.gate-logs
