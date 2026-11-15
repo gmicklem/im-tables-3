@@ -5,7 +5,7 @@
 ;; Not declared here, on purpose:
 ;;  - org.clojure/clojure and clojurescript: the consuming application pins them (shadow-cljs
 ;;    bundles ClojureScript for our own builds).
-;;  - cljsjs/*: React, react-select, react-day-picker, react-transition-group and
+;;  - cljsjs/*: React, react-select and
 ;;    highlight.js come from npm (package.json). The sources still say (:require
 ;;    [cljsjs.react-select]) etc. and use the browser globals, so under shadow-cljs the shim/
 ;;    directory (the :cljs alias) supplies stand-in namespaces that load the npm package and
@@ -19,8 +19,8 @@
              "clojars" {:url "https://repo.clojars.org/"}}
 
  :deps {org.clojure/core.async     {:mvn/version "1.1.587"}
-        re-frame/re-frame          {:mvn/version "0.12.0"}
-        reagent/reagent            {:mvn/version "0.10.0"}
+        re-frame/re-frame          {:mvn/version "1.4.7"}
+        reagent/reagent            {:mvn/version "1.2.0"}
         joshkh/ctrlz               {:mvn/version "0.3.0"}
         binaryage/oops             {:mvn/version "0.7.0"}
         inflections/inflections    {:mvn/version "0.13.2"}

@@ -1,6 +1,6 @@
 (ns im-tables.core
   (:require [reagent.core :as reagent]
-            [reagent.dom :as dom]
+            [reagent.dom.client :as rdc]
             [re-frame.core :as re-frame]
             [im-tables.events]
             [im-tables.subs]
@@ -8,8 +8,6 @@
             [im-tables.views :as views]
             [im-tables.views.core :refer [main]]
             [im-tables.config :as config]
-            [cljsjs.react-transition-group]
-            [cljsjs.react-day-picker]
             [cljsjs.react-select]
             [cljsjs.highlight]
             [cljsjs.highlight.langs.javascript]
@@ -24,10 +22,11 @@
     (enable-console-print!)
     (println "dev mode")))
 
+(defonce root (delay (rdc/create-root (.getElementById js/document "app"))))
+
 (defn mount-root []
   (re-frame/clear-subscription-cache!)
-  (dom/render [views/main-panel]
-              (.getElementById js/document "app")))
+  (rdc/render @root [views/main-panel]))
 
 (defn table
   "This is the primary means of including an im-table in a re-frame project.

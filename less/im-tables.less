@@ -2,7 +2,6 @@
 @import "tooltip";
 @import "modal";
 @import "highlight";
-@import "calendar";
 
 .force-wrap {
 
@@ -179,33 +178,6 @@
         padding-left: 20px;
     }
 
-    .fade-enter {
-        opacity: 0.01;
-    }
-
-    .fade-enter.fade-enter-active {
-        opacity: 1;
-        transition: opacity 50ms ease-in;
-    }
-
-    .fade-leave {
-        opacity: 1;
-    }
-
-    .fade-leave.fade-leave-active {
-        opacity: 0.01;
-        transition: opacity 50ms ease-in;
-    }
-
-    .fade-appear {
-        opacity: 0.01;
-    }
-
-    .fade-appear.fade-appear-active {
-        opacity: 1;
-        transition: opacity 50ms ease-in;
-    }
-
     .table-container {
         overflow: auto;
     }
@@ -285,7 +257,7 @@
             // Remove green color from active filter.
             color: rgb(51, 51, 51);
 
-            .DayPickerInput {
+            .date-constraint-input {
                 width: 175px;
             }
 
