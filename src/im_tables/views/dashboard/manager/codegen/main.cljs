@@ -3,7 +3,8 @@
             [reagent.core :as r]
             [clojure.string :as string]
             [imcljs.internal.utils :refer [scrub-url]]
-            [oops.core :refer [ocall oget oset!]]))
+            [oops.core :refer [ocall oget oset!]]
+            [cljsjs.highlight]))
 
 (def languages {"js" {:label "JavaScript"}
                 "pl" {:label "Perl"}

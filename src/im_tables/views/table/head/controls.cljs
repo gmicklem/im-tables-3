@@ -11,7 +11,13 @@
             [im-tables.utils :refer [on-event pretty-number display-name place-below!]]
             [cljs-time.coerce :as time-coerce]
             [cljs-time.format :as time-format]
-            [goog.string :as gstring]))
+            [goog.string :as gstring]
+            ;; These set the globals used below (js/ReactTransitionGroup, js/DayPicker, js/Select).
+            ;; js/ReactTransitionGroup is read when this namespace loads, so it has to be
+            ;; required here and not only from im-tables.core.
+            [cljsjs.react-transition-group]
+            [cljsjs.react-day-picker]
+            [cljsjs.react-select]))
 
 (def css-transition-group
   (reagent/adapt-react-class js/ReactTransitionGroup.CSSTransitionGroup))

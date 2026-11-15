@@ -7,7 +7,8 @@
             [cljs-time.format :refer [unparse formatters]]
             [goog.string :as gstring]
             [goog.json :as json]
-            [im-tables.utils :refer [clj->json]]))
+            [im-tables.utils :refer [clj->json]]
+            [cljsjs.highlight]))
 
 ;; This email is used if no maintainerEmail is available, or when we wish to
 ;; CC support (ie. when the failure is caused by a software problem).
