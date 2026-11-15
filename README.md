@@ -149,7 +149,7 @@ lein kaocha      # run unit tests
 
 ### Building with the Clojure CLI and shadow-cljs
 
-`deps.edn`, `shadow-cljs.edn` and `build.clj` are the replacement for the lein setup below (both work for now). You need the Clojure CLI (1.12), Node 22 and `npm ci` first. The libraries that used to come from cljsjs jars (React, react-select, react-day-picker, highlight.js) come from npm; `shim/cljsjs/` holds stand-in namespaces that load them and set the browser globals the sources use.
+`deps.edn`, `shadow-cljs.edn` and `build.clj` are the replacement for the lein setup below (both work for now). You need the Clojure CLI (1.12), Node 22 and `npm ci` first. The libraries that used to come from cljsjs jars (React, react-select, highlight.js) come from npm; `shim/cljsjs/` holds stand-in namespaces that load them and set the browser globals the sources use.
 
 ```
 clojure -M:fmt check                      # cljfmt (clojure -M:fmt fix to reformat)

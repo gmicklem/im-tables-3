@@ -17,7 +17,7 @@
 ;;       Node has no XMLHttpRequest, which cljs-http needs: im-tables.test-utils installs the
 ;;       xhr2 npm package as a polyfill.
 ;;
-;; React, react-select, react-day-picker and highlight.js come from
+;; React, react-select and highlight.js come from
 ;; npm (package.json, the same versions the cljsjs jars carried); the shim/ directory (deps.edn
 ;; :cljs alias) provides the cljsjs.* namespaces that the sources still require.
 {:deps     {:aliases [:cljs :cljs-dev :test]}

@@ -17,7 +17,6 @@
                  [binaryage/oops "0.7.0"]
                  [inflections "0.13.2"]
                  [org.intermine/imcljs "1.6.0"]
-                 [cljsjs/react-day-picker "7.3.0-1"]
                  [cljsjs/react-select "2.4.4-0"]
                  [com.andrewmcveigh/cljs-time "0.5.2"]]
 
