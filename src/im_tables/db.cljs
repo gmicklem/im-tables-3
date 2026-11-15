@@ -46,7 +46,7 @@
                  :where [{:path "Gene", :op "IN", :value "esyN demo list"}]})
 
 (def default-db
-  {;:service  {:root "www.flymine.org/query"}
+  {;:service  {:root "www.humanmine.org/humanmine"}
    ;:query    {:from   "Gene"
    ;           :size   10
    ;           :select ["secondaryIdentifier"
@@ -91,7 +91,7 @@
                          :remove #{}
                          :export-data-package false
                          :compression nil}
-              :links {:vocab {:mine "flymine"}
+              :links {:vocab {:mine "humanmine"}
                       :on-click nil
                       :url (fn [vocab] (str "#/reportpage/"
                                             (:mine vocab) "/"

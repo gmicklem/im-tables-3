@@ -9,7 +9,7 @@
 ;;
 ;;   npx shadow-cljs compile test && node out/test.js
 ;;       the unit tests (what scripts/gate-im-tables.sh runs). They send read-only queries
-;;       to the live FlyMine (https://www.flymine.org/flymine), no Biotestmine is needed.
+;;       to the live HumanMine (https://www.humanmine.org/humanmine), no Biotestmine is needed.
 ;;       To query another mine, set IM_TABLES_SERVICE_ROOT (and optionally
 ;;       IM_TABLES_MINE_NAME) before compiling, e.g.
 ;;         IM_TABLES_SERVICE_ROOT=http://localhost:8090/humanmine npx shadow-cljs compile test
@@ -36,6 +36,6 @@
          :output-to       "out/test.js"
          :ns-regexp       "-test$"
          :closure-defines {im-tables.test-config/SERVICE-ROOT
-                           #shadow/env ["IM_TABLES_SERVICE_ROOT" "https://www.flymine.org/flymine"]
+                           #shadow/env ["IM_TABLES_SERVICE_ROOT" "https://www.humanmine.org/humanmine"]
                            im-tables.test-config/MINE-NAME
-                           #shadow/env ["IM_TABLES_MINE_NAME" "flymine"]}}}}
+                           #shadow/env ["IM_TABLES_MINE_NAME" "humanmine"]}}}}

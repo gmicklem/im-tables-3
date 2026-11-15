@@ -19,6 +19,9 @@
                       :url (fn [{:keys [mine class objectId] :as _vocab}]
                              (string/join "/" [nil mine "report" class objectId]))}}})
 
+;; The flymine-* configs below, and subclass-config, outer-join-config and true-false-config,
+;; are about Drosophila data (eve, runt, allele and expression data that HumanMine lacks); the
+;; rest of the demo uses HumanMine.
 (def flymine-config
   {:service {:root "https://www.flymine.org/flymine"}
    :query {:from "Gene"
@@ -133,7 +136,7 @@
                              (string/join "/" [nil mine "report" class objectId]))}}})
 
 (def pickitems-config
-  {:service {:root "https://www.flymine.org/flymine"}
+  {:service {:root "https://www.humanmine.org/humanmine"}
    :query {:from "Gene"
            :select ["symbol",
                     "secondaryIdentifier",
@@ -144,9 +147,9 @@
                     "goAnnotation.qualifier"]
            :where [{:path "Gene"
                     :op "LOOKUP"
-                    :value "Notch"}]}
+                    :value "NOTCH1"}]}
    :settings {:pagination {:limit 10}
-              :links {:vocab {:mine "flymine"}
+              :links {:vocab {:mine "humanmine"}
                       :url (fn [{:keys [mine class objectId] :as _vocab}]
                              (string/join "/" [nil mine "report" class objectId]))}}})
 
@@ -168,15 +171,15 @@
                       :url (fn [{:keys [mine class objectId] :as _vocab}]
                              (string/join "/" [nil mine "report" class objectId]))}}})
 
-(def flymine-url-config
-  {:service {:root "https://www.flymine.org/flymine"}
+(def humanmine-url-config
+  {:service {:root "https://www.humanmine.org/humanmine"}
    :query {:from "DataSet"
            :select ["DataSet.name",
                     "DataSet.url"]
            :where [{:path "DataSet.url"
                     :op "IS NOT NULL"}]}
    :settings {:pagination {:limit 10}
-              :links {:vocab {:mine "flymine"}
+              :links {:vocab {:mine "humanmine"}
                       :url (fn [{:keys [mine class objectId] :as _vocab}]
                              (string/join "/" [nil mine "report" class objectId]))}}})
 
@@ -228,7 +231,7 @@
 (def number-of-tables 1)
 (defn reboot-tables-fn []
   (dotimes [n number-of-tables]
-    (re-frame/dispatch-sync [:im-tables/load [:test :location n] flymine-url-config])))
+    (re-frame/dispatch-sync [:im-tables/load [:test :location n] humanmine-url-config])))
 
 (defn main-panel []
   (let [show? (r/atom true)]
