@@ -12,7 +12,7 @@
                  [cljsjs/react "18.3.1-1"]
                  ;; also provides react-dom/client and react-dom/server
                  [cljsjs/react-dom "18.3.1-1"]
-                 [cljsjs/highlight "9.12.0-2"]
+                 [cljsjs/highlight "11.7.0-0"]
                  [joshkh/ctrlz "0.3.0"]
                  [binaryage/oops "0.7.0"]
                  [inflections "0.13.2"]
