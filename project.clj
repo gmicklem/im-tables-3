@@ -16,6 +16,9 @@
                  [joshkh/ctrlz "0.3.0"]
                  [binaryage/oops "0.7.0"]
                  [inflections "0.13.2"]
+                 ;; lein cannot use git dependencies, so it stays on the last Clojars release; deps.edn
+                 ;; pins imcljs 1.7.0-SNAPSHOT by git sha until 1.7.0 is released (gate depcheck
+                 ;; compares the artifact name only for git dependencies).
                  [org.intermine/imcljs "1.6.0"]
                  ;; There is no cljsjs build of react-select 5 (deps.edn builds use npm 5.10.2),
                  ;; so lein builds stay on 2.4.4, which still runs on React 18.
