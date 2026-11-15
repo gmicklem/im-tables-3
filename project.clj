@@ -14,7 +14,6 @@
                  [binaryage/oops "0.7.0"]
                  [inflections "0.13.2"]
                  [org.intermine/imcljs "1.6.0"]
-                 [day8.re-frame/test "0.1.5"]
                  [cljsjs/react-day-picker "7.3.0-1"]
                  [cljsjs/react-select "2.4.4-0"]
                  [com.andrewmcveigh/cljs-time "0.5.2"]]
@@ -73,7 +72,8 @@
              :build {:prep-tasks ["build"]}
              :uberjar {:prep-tasks ["build"]}
              :repl {:source-paths ["dev"]}
-             :kaocha {:dependencies [[lambdaisland/kaocha "1.0-612"]
+             :kaocha {:dependencies [[day8.re-frame/test "0.1.5"]
+                                     [lambdaisland/kaocha "1.0-612"]
                                      [lambdaisland/kaocha-cljs "0.0-71"]]}}
 
   :cljsbuild {:builds [{:id "dev"
