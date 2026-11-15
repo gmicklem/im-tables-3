@@ -2,11 +2,16 @@
   :licence "LGPL-2.1-only"
   :description "ClojureScript library to display and manipulate InterMine query results on a webpage"
   :url "http://www.intermine.org"
-  :dependencies [[org.clojure/clojure "1.10.1"]
-                 [org.clojure/clojurescript "1.10.520"]
+  :dependencies [[org.clojure/clojure "1.12.0"]
+                 [org.clojure/clojurescript "1.11.132"]
                  [org.clojure/core.async "1.1.587"]
-                 [re-frame "0.12.0"]
-                 [reagent "0.10.0"]
+                 [re-frame "1.4.7"]
+                 [reagent "1.2.0"]
+                 ;; reagent 1.1+ no longer brings React: lein builds take it from cljsjs
+                 ;; (deps.edn builds from npm, see package.json).
+                 [cljsjs/react "16.13.0-0"]
+                 [cljsjs/react-dom "16.13.0-0"]
+                 [cljsjs/react-dom-server "16.13.0-0"]
                  [cljsjs/react-transition-group "1.2.0-0"
                   :exclusions [cljsjs/react cljsjs/react-dom]]
                  [cljsjs/highlight "9.12.0-2"]
@@ -64,8 +69,8 @@
   :main im-tables.core
 
   :profiles {:dev {:dependencies [[binaryage/devtools "1.0.0"]
-                                  [day8.re-frame/re-frame-10x "0.6.2"]
-                                  [day8.re-frame/tracing "0.5.3"]
+                                  [day8.re-frame/re-frame-10x "1.12.3"]
+                                  [day8.re-frame/tracing "0.6.2"]
                                   [figwheel-sidecar "0.5.20"]
                                   [cider/piggieback "0.4.2"]]
                    :plugins [[lein-figwheel "0.5.19"]]}
@@ -73,8 +78,8 @@
              :uberjar {:prep-tasks ["build"]}
              :repl {:source-paths ["dev"]}
              :kaocha {:dependencies [[day8.re-frame/test "0.1.5"]
-                                     [lambdaisland/kaocha "1.0-612"]
-                                     [lambdaisland/kaocha-cljs "0.0-71"]]}}
+                                     [lambdaisland/kaocha "1.91.1392"]
+                                     [lambdaisland/kaocha-cljs "1.9.181"]]}}
 
   :cljsbuild {:builds [{:id "dev"
                         :source-paths ["src"]
