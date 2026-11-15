@@ -54,6 +54,19 @@
       (ocall element :click)
       (ocall (oget js/document :body) :removeChild element))))
 
+;; highlight.js 11 refuses (with a console message) to highlight an element again unless
+;; `dataset.highlighted` is cleared, and it warns about the child elements (spans) that a
+;; previous pass left behind. It also takes the language from the classes a previous pass
+;; added, so a block that is highlighted again after the language changed would be treated
+;; as the old language. So reduce an already highlighted block to plain text, without
+;; classes, first.
+(defn- highlight-block! [block]
+  (when (oget block :dataset.highlighted)
+    (oset! block :textContent (oget block :textContent))
+    (oset! block :className "")
+    (js-delete (oget block :dataset) "highlighted"))
+  (ocall js/hljs :highlightElement block))
+
 (defn modal-body [loc]
   (let [code (subscribe [:codegen/formatted-code loc])
         codegen-settings (subscribe [:codegen/options loc])
@@ -64,12 +77,10 @@
                               ; set a maximum height on the [:code] block below
                              (reset! max-height (-> js/window js/$ (ocall :height)))
                              (ocall (js/$ "pre code") :each
-                                    (fn [i block]
-                                      (ocall js/hljs :highlightBlock block))))
+                                    (fn [i block] (highlight-block! block))))
       :component-did-update (fn [this]
                               (ocall (js/$ "pre code") :each
-                                     (fn [i block]
-                                       (ocall js/hljs :highlightBlock block))))
+                                     (fn [i block] (highlight-block! block))))
       :reagent-render (fn [loc]
                         (let [highlight? (:highlight? @codegen-settings)]
                           [:div.container-fluid
@@ -81,7 +92,11 @@
                                 ; Show the code and fix the height of the code container
                                 ; to prevent expanding over the viewport
                                (if highlight?
-                                 [:pre [:code {:style {:max-height (str (/ @max-height 2) "px")}} @code]]
+                                 ;; highlight.js replaces the code's text node with spans, so React
+                                 ;; must not reconcile (and remove) that node when the code
+                                 ;; changes: key the element on its content to get a new one.
+                                 [:pre [:code {:key (hash [(:lang @codegen-settings) @code])
+                                               :style {:max-height (str (/ @max-height 2) "px")}} @code]]
                                  [:pre {:style {:max-height (str (/ @max-height 2) "px")}} @code]))]]]))})))
 
 (defn modal-footer [loc]

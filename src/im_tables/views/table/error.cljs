@@ -46,7 +46,7 @@ ERROR: " query-error)))))
     (reagent/create-class
      {:component-did-mount (fn [_]
                              (when-let [code-elem @!code]
-                               (ocall js/hljs :highlightBlock code-elem)))
+                               (ocall js/hljs :highlightElement code-elem)))
       :reagent-render (fn [loc code-string]
                         [:code.language-xml
                          {:ref #(reset! !code %)}
