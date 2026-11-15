@@ -10,6 +10,10 @@
 ;;   npx shadow-cljs compile test && node out/test.js
 ;;       the unit tests (what scripts/gate-im-tables.sh runs). They send read-only queries
 ;;       to the live FlyMine (https://www.flymine.org/flymine), no Biotestmine is needed.
+;;       To query another mine, set IM_TABLES_SERVICE_ROOT (and optionally
+;;       IM_TABLES_MINE_NAME) before compiling, e.g.
+;;         IM_TABLES_SERVICE_ROOT=http://localhost:8090/humanmine npx shadow-cljs compile test
+;;       (see test/cljs/im_tables/test_config.cljs).
 ;;       Node has no XMLHttpRequest, which cljs-http needs: im-tables.test-utils installs the
 ;;       xhr2 npm package as a polyfill.
 ;;
@@ -28,6 +32,10 @@
          :devtools         {:after-load im-tables.core/mount-root
                             :preloads   [devtools.preload]}}
 
-  :test {:target    :node-test
-         :output-to "out/test.js"
-         :ns-regexp "-test$"}}}
+  :test {:target          :node-test
+         :output-to       "out/test.js"
+         :ns-regexp       "-test$"
+         :closure-defines {im-tables.test-config/SERVICE-ROOT
+                           #shadow/env ["IM_TABLES_SERVICE_ROOT" "https://www.flymine.org/flymine"]
+                           im-tables.test-config/MINE-NAME
+                           #shadow/env ["IM_TABLES_MINE_NAME" "flymine"]}}}}

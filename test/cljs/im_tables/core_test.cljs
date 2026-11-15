@@ -5,11 +5,12 @@
             [day8.re-frame.test :refer-macros [run-test-sync run-test-async wait-for]]
             [im-tables.events]
             [im-tables.subs]
+            [im-tables.test-config :as config]
             [clojure.string :as string]))
 
 (use-fixtures :each utils/fixtures)
 
-(def im-config {:service {:root "https://www.flymine.org/flymine"}
+(def im-config {:service {:root config/SERVICE-ROOT}
                 :query {:from "Gene"
                         :select ["symbol"
                                  "secondaryIdentifier"
@@ -21,7 +22,7 @@
                                  :op "CONTAINS"
                                  :value "abc"}]}
                 :settings {:pagination {:limit 10}
-                           :links {:vocab {:mine "flymine"}
+                           :links {:vocab {:mine config/MINE-NAME}
                                    :url (fn [{:keys [mine class objectId] :as _vocab}]
                                           (string/join "/" [nil mine "report" class objectId]))}}})
 
