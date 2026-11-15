@@ -27,7 +27,7 @@
   :cljfmt {:indents {wait-for [[:inner 0]]
                      after-load [[:inner 0]]}}
 
-  :aliases ~(let [compile-less ["npx" "lessc" "less/im-tables.less" "resources/public/css/im-tables.css"]
+  :aliases ~(let [compile-less ["npx" "lessc" "--math=always" "less/im-tables.less" "resources/public/css/im-tables.css"]
                   compile-less-prod (conj compile-less "-x")
                   watch-less ["npx" "chokidar" "less/**/*.less" "-c" (clojure.string/join " " compile-less) "--initial"]
                   watch-less-silent (conj watch-less "--silent")]

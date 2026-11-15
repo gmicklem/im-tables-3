@@ -32,9 +32,10 @@
 
 (defn css
   "Compile less/im-tables.less with the lessc from node_modules (the same command as
-  the old `lein build`: minified)."
+  the old `lein build`: minified). --math=always because the stylesheet divides without
+  parentheses (`@spacer/2`), which lessc 4 only evaluates with that option."
   [_]
-  (b/process {:command-args ["npx" "lessc" "-x" "less/im-tables.less" css-file]})
+  (b/process {:command-args ["npx" "lessc" "--math=always" "-x" "less/im-tables.less" css-file]})
   (println "Compiled" css-file))
 
 (defn jar [_]
