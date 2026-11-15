@@ -2,4 +2,10 @@
 {:tests [{:id :unit-cljs
           :type :kaocha.type/cljs
           :cljs/repl-env cljs.repl.browser/repl-env
-          :cljs/timeout 60000}]}
+          :cljs/timeout 60000
+          ;; Which mine the tests query: see test/cljs/im_tables/test_config.cljs. Same
+          ;; environment variables and defaults as the shadow-cljs :test build.
+          :cljs/compiler-options
+          {:closure-defines
+           {im-tables.test-config/SERVICE-ROOT #or [#env IM_TABLES_SERVICE_ROOT "https://www.flymine.org/flymine"]
+            im-tables.test-config/MINE-NAME #or [#env IM_TABLES_MINE_NAME "flymine"]}}}]}
