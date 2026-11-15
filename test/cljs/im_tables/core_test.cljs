@@ -26,12 +26,30 @@
                                    :url (fn [{:keys [mine class objectId] :as _vocab}]
                                           (string/join "/" [nil mine "report" class objectId]))}}})
 
+;; The assertions below check what im-tables does with a response (rows, columns, sort
+;; order), not which genes a particular mine holds, so the suite passes against any mine with
+;; genes whose symbol contains "abc" (FlyMine, HumanMine...). See test_config.cljs.
+
+(defn- rows
+  "The rows of the current page, in display order (:results is a map keyed by row index)."
+  [response]
+  (map val (sort-by key (:results response))))
+
+(defn- column-values [response column]
+  (map (fn [row] (:value (first (filter #(= (:column %) column) row))))
+       (rows response)))
+
 (deftest load-im-tables
   (let [loc [:default]]
     (utils/after-load loc im-config
       (testing "im-table runs query"
         (let [response @(rf/subscribe [:main/query-response loc])]
-          (is (some? response)))))))
+          (is (some? response))
+          (testing "and stores at least one row, with a cell for every selected column"
+            (is (seq (rows response)))
+            (is (every? #(= (set (map (partial str "Gene.") (get-in im-config [:query :select])))
+                            (set (map :column %)))
+                        (rows response)))))))))
 
 (deftest column-summary
   (let [loc [:default]]
@@ -51,8 +69,11 @@
         (testing "response can be sorted by column"
           (let [response @(rf/subscribe [:main/query-response loc])
                 result (get-in response [:results 0])]
-            (is (= "100132289"
-                   (->> result
-                        (filter #(= (:column %) "Gene.primaryIdentifier"))
-                        first
-                        :value)))))))))
+            (is (= [{:path "primaryIdentifier" :direction "ASC"}]
+                   (:sortOrder @(rf/subscribe [:main/query loc]))))
+            (is (some? result))
+            ;; was: the first row is FlyMine's "100132289". Any mine: the page is in
+            ;; ascending primaryIdentifier order (identifiers compared case-insensitively).
+            (let [ids (column-values response "Gene.primaryIdentifier")]
+              (is (every? string? ids))
+              (is (= ids (sort-by string/lower-case ids))))))))))
