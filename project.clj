@@ -12,8 +12,6 @@
                  [cljsjs/react "16.13.0-0"]
                  [cljsjs/react-dom "16.13.0-0"]
                  [cljsjs/react-dom-server "16.13.0-0"]
-                 [cljsjs/react-transition-group "1.2.0-0"
-                  :exclusions [cljsjs/react cljsjs/react-dom]]
                  [cljsjs/highlight "9.12.0-2"]
                  [joshkh/ctrlz "0.3.0"]
                  [binaryage/oops "0.7.0"]

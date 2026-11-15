@@ -12,15 +12,9 @@
             [cljs-time.coerce :as time-coerce]
             [cljs-time.format :as time-format]
             [goog.string :as gstring]
-            ;; These set the globals used below (js/ReactTransitionGroup, js/DayPicker, js/Select).
-            ;; js/ReactTransitionGroup is read when this namespace loads, so it has to be
-            ;; required here and not only from im-tables.core.
-            [cljsjs.react-transition-group]
+            ;; These set the globals used below (js/DayPicker, js/Select).
             [cljsjs.react-day-picker]
             [cljsjs.react-select]))
-
-(def css-transition-group
-  (reagent/adapt-react-class js/ReactTransitionGroup.CSSTransitionGroup))
 
 ;; nil type specified in :applies-to is for classes (i.e., not attributes).
 (def operators [{:op "LOOKUP"
@@ -504,10 +498,10 @@
           (str " Filter")]]]])))
 
 (defn column-summary-thinking []
-  [css-transition-group
-   {:transition-name          "fade"
-    :transition-enter-timeout 50
-    :transition-leave-timeout 50}
+  ;; The span is what the CSSTransitionGroup (react-transition-group 1) used here
+  ;; rendered. Its 50 ms fade never showed: the loader is there from the first
+  ;; render, and CSSTransitionGroup only animated children added later.
+  [:span
    [:div.column-summary-loader
     [:i.fa.fa-cog.fa-spin.fa-4x.fa-fw]]])
 

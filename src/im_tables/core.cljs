@@ -8,7 +8,6 @@
             [im-tables.views :as views]
             [im-tables.views.core :refer [main]]
             [im-tables.config :as config]
-            [cljsjs.react-transition-group]
             [cljsjs.react-day-picker]
             [cljsjs.react-select]
             [cljsjs.highlight]
