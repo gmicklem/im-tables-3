@@ -3,7 +3,6 @@
             [im-tables.views.core :as main-view]
             [reagent.core :as r]
             [clojure.string :as string]
-            [reagent.dom.server :as server]
             [oops.core :refer [ocall]]))
 
 (def humanmine-config
