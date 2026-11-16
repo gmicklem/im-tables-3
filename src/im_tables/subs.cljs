@@ -76,11 +76,6 @@
    (get-in db (glue prefix [:settings]))))
 
 (reg-sub
- :settings/cdn
- (fn [db [_ prefix]]
-   (get-in db (glue prefix [:settings :cdn]))))
-
-(reg-sub
  :settings/compact
  (fn [db [_ prefix]]
    (get-in db (glue prefix [:settings :compact]))))
@@ -250,28 +245,41 @@
 
 ;;;;;;;;;;;;;;;; Code generation
 
-(defn generate-javascript [{:keys [cdn query service html? comments?]}]
-  (string/join "\n"
-               (-> []
-                   (cond->
-                    (and html? comments?) (conj "<!-- The Element we will target -->")
-                    html? (conj "<div id=\"some-elem\"></div>\n")
-                    (and html? comments?) (conj "<!-- The imtables source -->")
-                    html? (conj (str "<script src=\"" cdn "/js/intermine/im-tables/latest/imtables.js\" charset=\"UTF8\"></script>"))
-                    html? (conj (str "<link href=\"" cdn "/js/intermine/im-tables/latest/main.sandboxed.css\" rel=\"stylesheet\">\n"))
-                    html? (conj "<script>")
+(def im-tables-vendor-path
+  "Where an InterMine webapp (5.1.1 and later) serves the im-tables 2.x bundle from, relative to
+  the service root. Same files and version as the webapp's own JavaScript code generator
+  (WebserviceJavaScriptCodeGenerator) emits. cdn.intermine.org no longer exists."
+  "/vendor/js/intermine/im-tables/2.2.0-beta")
 
-                    (and (not html?) comments?) (conj "/* Install from npm: npm install imtables\n * This snippet assumes the presence on the page of an element like:\n * <div id=\"some-elem\"></div>\n */")
-                    (not html?) (conj "var imtables = require(\"imtables\");\n"))
-                   (conj "var selector = \"#some-elem\";\n")
-                   (conj (str "var service = " (js/JSON.stringify
-                                                (clj->js (-> service
-                                                             (select-keys [:root :token])
-                                                             (update :root scrub-url))) nil 2) "\n"))
-                   (conj (str "var query = " (js/JSON.stringify (clj->js query) nil 2) "\n"))
-                   (conj (str "imtables.loadTable(\n  selector, // Can also be an element, or a jQuery object.\n  {\"start\":0,\"size\":25}, // May be null\n  {service: service, query: query} // May be an imjs.Query\n).then(\n  function (table) { console.log('Table loaded', table); },\n  function (error) { console.error('Could not load table', error); }\n);"))
-                   (cond->
-                    html? (conj "</script>")))))
+(defn mine-root
+  "The webapp root (e.g. https://www.humanmine.org/humanmine) of a service whose :root may or
+  may not end in /service."
+  [root]
+  (string/replace (str root) #"(/+service)?/*$" ""))
+
+(defn generate-javascript [{:keys [query service html? comments?]}]
+  (let [mine-root (mine-root (:root service))]
+    (string/join "\n"
+                 (-> []
+                     (cond->
+                      (and html? comments?) (conj "<!-- The Element we will target -->")
+                      html? (conj "<div id=\"some-elem\"></div>\n")
+                      (and html? comments?) (conj "<!-- The imtables source -->")
+                      html? (conj (str "<script src=\"" mine-root im-tables-vendor-path "/imtables.js\" charset=\"UTF-8\"></script>"))
+                      html? (conj (str "<link href=\"" mine-root im-tables-vendor-path "/main.sandboxed.css\" rel=\"stylesheet\">\n"))
+                      html? (conj "<script>")
+
+                      (and (not html?) comments?) (conj "/* Install from npm: npm install imtables\n * This snippet assumes the presence on the page of an element like:\n * <div id=\"some-elem\"></div>\n */")
+                      (not html?) (conj "var imtables = require(\"imtables\");\n"))
+                     (conj "var selector = \"#some-elem\";\n")
+                     (conj (str "var service = " (js/JSON.stringify
+                                                  (clj->js (-> service
+                                                               (select-keys [:root :token])
+                                                               (update :root scrub-url))) nil 2) "\n"))
+                     (conj (str "var query = " (js/JSON.stringify (clj->js query) nil 2) "\n"))
+                     (conj (str "imtables.loadTable(\n  selector, // Can also be an element, or a jQuery object.\n  {\"start\":0,\"size\":25}, // May be null\n  {service: service, query: query} // May be an imjs.Query\n).then(\n  function (table) { console.log('Table loaded', table); },\n  function (error) { console.error('Could not load table', error); }\n);"))
+                     (cond->
+                      html? (conj "</script>"))))))
 
 (defn remove-java-comments [s]
   (clojure.string/replace s #"/\*([\S\s]*?)\*/" ""))
@@ -292,7 +300,7 @@
      #"\n\n\n+"
      "\n\n")))
 
-(defn format-code [{:keys [lang code comments? html? query service cdn] :as options}]
+(defn format-code [{:keys [lang code comments? html? query service] :as options}]
   (cond
     (= "js" lang) (when (and query service) (generate-javascript options))
     (= "java" lang) (cond-> code (not comments?) remove-java-comments)
@@ -316,12 +324,11 @@
 (reg-sub
  :codegen/formatted-code
  (fn [[_ loc]]
-   [(subscribe [:settings/cdn loc])
-    (subscribe [:codegen/code loc])
+   [(subscribe [:codegen/code loc])
     (subscribe [:codegen/options loc])
     (subscribe [:main/query loc])
     (subscribe [:assets/service loc])])
- (fn [[cdn code options query service] [_ _loc]]
+ (fn [[code options query service] [_ _loc]]
    (let [{:keys [html? comments? lang]} options]
      (when code
        (format-code {:lang lang
@@ -329,8 +336,7 @@
                      :comments? comments?
                      :html? html?
                      :query query
-                     :service service
-                     :cdn cdn})))))
+                     :service service})))))
 
 (reg-sub
  :ui/column-sort-direction
