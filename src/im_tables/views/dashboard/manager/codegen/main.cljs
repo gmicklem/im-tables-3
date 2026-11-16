@@ -6,14 +6,33 @@
             [oops.core :refer [ocall oget oset!]]
             [cljsjs.highlight]))
 
-(def languages {"js" {:label "JavaScript"}
-                "pl" {:label "Perl"}
+;; :hljs is the name the highlight.js language is registered under (see the
+;; cljsjs.highlight.langs.* requires in im-tables.core). The code block gets an explicit
+;; `language-<name>` class from it: highlight.js 11's auto-detection takes Ruby for Perl.
+(def languages {"js" {:label "JavaScript"
+                      :hljs "javascript"}
+                "pl" {:label "Perl"
+                      :hljs "perl"}
                 "py" {:label "Python"
+                      :hljs "python"
                       :comment "#"}
                 "rb" {:label "Ruby"
+                      :hljs "ruby"
                       :comment "#"}
-                "java" {:label "Java"}
-                "xml" {:label "XML"}})
+                "java" {:label "Java"
+                        :hljs "java"}
+                "xml" {:label "XML"
+                       :hljs "xml"}})
+
+(defn highlight-class
+  "The class that tells highlight.js which language `lang` (a key of `languages`) is, e.g.
+  \"language-ruby\". The JavaScript generated with `html?` is a whole HTML page, which
+  highlight.js knows as xml (it highlights the embedded script and style too)."
+  [lang html?]
+  (when-let [hljs-name (if (and html? (= "js" lang))
+                         "xml"
+                         (get-in languages [lang :hljs]))]
+    (str "language-" hljs-name)))
 
 (defn options [loc]
   (let [options (subscribe [:codegen/options loc])]
@@ -56,14 +75,14 @@
 
 ;; highlight.js 11 refuses (with a console message) to highlight an element again unless
 ;; `dataset.highlighted` is cleared, and it warns about the child elements (spans) that a
-;; previous pass left behind. It also takes the language from the classes a previous pass
-;; added, so a block that is highlighted again after the language changed would be treated
-;; as the old language. So reduce an already highlighted block to plain text, without
-;; classes, first.
+;; previous pass left behind. So reduce an already highlighted block to plain text first.
+;; The classes a previous pass added (`hljs`, ...) are dropped too, but the explicit
+;; `language-<name>` class (see `highlight-class`) must stay, or highlight.js would go back
+;; to guessing the language.
 (defn- highlight-block! [block]
-  (when (oget block :dataset.highlighted)
+  (when (oget block :dataset :?highlighted)
     (oset! block :textContent (oget block :textContent))
-    (oset! block :className "")
+    (oset! block :className (or (re-find #"language-\S+" (oget block :className)) ""))
     (js-delete (oget block :dataset) "highlighted"))
   (ocall js/hljs :highlightElement block))
 
@@ -95,7 +114,9 @@
                                  ;; highlight.js replaces the code's text node with spans, so React
                                  ;; must not reconcile (and remove) that node when the code
                                  ;; changes: key the element on its content to get a new one.
-                                 [:pre [:code {:key (hash [(:lang @codegen-settings) @code])
+                                 [:pre [:code {:key (hash [(:lang @codegen-settings) (:html? @codegen-settings) @code])
+                                               :class (highlight-class (:lang @codegen-settings)
+                                                                       (:html? @codegen-settings))
                                                :style {:max-height (str (/ @max-height 2) "px")}} @code]]
                                  [:pre {:style {:max-height (str (/ @max-height 2) "px")}} @code]))]]]))})))
 
