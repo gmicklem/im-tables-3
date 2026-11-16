@@ -122,7 +122,9 @@
                   ;; requirements im-tables has on the query data.
                   :query (cond-> query
                            ;; constraintLogic should always be defined.
-                           (not (contains? query :constraintLogic))
+                           ;; (nil counts as undefined: queries parsed from XML have
+                           ;; :constraintLogic nil when the attribute is absent.)
+                           (nil? (:constraintLogic query))
                            (assoc :constraintLogic (constraints->logic (:where query)))
                            ;; constraints should be a vector
                            (list? (:where query))

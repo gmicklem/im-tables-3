@@ -65,6 +65,22 @@
   (->> (keep :code constraints)
        (string/join " and ")))
 
+(defn react-select-id?
+  "True when `id` (the id attribute of the last element that was clicked, which is
+  nil or \"\" when nothing was clicked, e.g. the dropdown is closed with the
+  keyboard or programmatically) belongs to a react-select element."
+  [id]
+  (and (string? id)
+       (string/starts-with? id "react-select")))
+
+(defn ensure-constraint-logic
+  "Returns the trimmed constraint logic string. When `logic` is nil or blank (the
+  query was parsed from XML that has no constraintLogic attribute, or the user
+  emptied the field) it is generated from `constraints` instead."
+  [logic constraints]
+  (or (not-empty (string/trim (or logic "")))
+      (constraints->logic constraints)))
+
 (defn clj->json
   "Converts a Clojure data structure to JSON."
   [x]
