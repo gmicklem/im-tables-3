@@ -3,6 +3,9 @@
             [inflections.core :refer [plural]]
             [imcljs.path :as path]
             [clojure.string :as string]
+            [cljs-time.core :as time]
+            [cljs-time.coerce :as time-coerce]
+            [cljs-time.format :as time-format]
             [goog.json :as json]
             [goog.i18n.NumberFormat.Format]
             [goog.style :as gstyle]
@@ -133,3 +136,17 @@
         pos (-> (gstyle/getRelativePosition above (gdom/getAncestorByClass above "im-table"))
                 (ocall :translate offset-x offset-y))]
     (gstyle/setPosition below pos)))
+
+;; Milliseconds as well (the same format BlueGenes uses for its default list names): a mine
+;; refuses a second list with an existing name (400), and the old `Date.toString` default
+;; had a resolution of one second.
+(def list-name-formatter (time-format/formatter "dd MMM yyyy HH:mm:ss.SSS"))
+
+(defn default-list-name
+  "The default name offered in the save dialog, e.g. \"Gene List (16 Nov 2026 12:34:56.789)\".
+  `date` is a js/Date or anything cljs-time can coerce; defaults to now."
+  ([type] (default-list-name type (time/now)))
+  ([type date]
+   (str (name type) " List ("
+        (time-format/unparse list-name-formatter (time-coerce/to-date-time date))
+        ")")))

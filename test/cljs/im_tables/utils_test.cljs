@@ -31,3 +31,18 @@
       (is (= "" (utils/ensure-constraint-logic nil nil))))
     (testing "an existing logic is kept, trimmed"
       (is (= "A or B" (utils/ensure-constraint-logic "  A or B " constraints))))))
+
+;; The default name in the save dialog had a resolution of one second (Date.toString), and a
+;; mine refuses a list whose name is taken (400), so two saves in the same second failed
+;; [im-7os.51]. Same format as BlueGenes' default list names.
+(deftest default-list-name-has-milliseconds
+  (let [t (js/Date. (.UTC js/Date 2026 10 16 12 34 56 789))]
+    (testing "the format matches BlueGenes' list names"
+      (is (= "Gene List (16 Nov 2026 12:34:56.789)" (utils/default-list-name "Gene" t)))
+      (is (= "Protein List (16 Nov 2026 12:34:56.789)" (utils/default-list-name :Protein t))))
+    (testing "two times 360 ms apart within one second get different names"
+      (is (not= (utils/default-list-name "Gene" t)
+                (utils/default-list-name "Gene" (js/Date. (+ (.getTime t) 360))))))
+    (testing "without a date it uses the current time"
+      (is (re-matches #"Gene List \(\d\d \w{3} \d{4} \d\d:\d\d:\d\d\.\d{3}\)"
+                      (utils/default-list-name "Gene"))))))
