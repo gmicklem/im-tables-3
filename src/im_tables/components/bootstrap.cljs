@@ -1,6 +1,5 @@
 (ns im-tables.components.bootstrap
   (:require [reagent.core :as reagent]
-            [reagent.dom :as dom]
             [reagent.dom.server :as server]
             [oops.core :refer [ocall oapply oget oset!]]
             [im-tables.utils :refer [place-below!]]))
@@ -13,35 +12,22 @@
                  :data-placement right
                  :data-content [:div [:h1 Hello] [:h4 Goodbye]]} Hover-Over-Me]]"
   []
-  (reagent/create-class
-   {;:component-did-mount
-     ;(fn [this]
-     ;  (let [node (dom/dom-node this)] (ocall (-> node js/$) "popover")))
-     ;:component-will-unmount
-     ;(fn [this]
-     ;  (let [node (dom/dom-node this)] (ocall (-> "popover" js/$) "remove")))
-     ;:component-did-update
-     ;(fn [this]
-     ;  (.log js/console "me" (dom/dom-node this))
-     ;  (let [node (dom/dom-node this)]
-     ;    (ocall (-> "popover" js/$) "remove")
-     ;    (ocall (-> node js/$) "popover")))
-    :component-did-mount
-    (fn [this])
-       ;(.log js/console "d" (ocall (js/$ (dom/dom-node this)) "popover"))
-
-    :component-did-update
-    (fn [this]
-      (.log js/console "me" (js/$ (dom/dom-node this)))
-      (-> (js/$ (dom/dom-node this))
-           ;(ocall "popover" "destroy")
-          (ocall "popover" "toggle")))
-    :reagent-render
-    (fn [[element attributes & rest]]
-      [element (-> attributes
-                   (assoc :data-html true)
-                   (assoc :data-container "body")
-                   (update :data-content server/render-to-static-markup)) rest])}))
+  ;; The node comes from a :ref callback on the element (React sets it before
+  ;; :component-did-update runs); reagent.dom/dom-node is deprecated and gone in reagent 2.
+  (let [!node (atom nil)]
+    (reagent/create-class
+     {:component-did-update
+      (fn [_this]
+        (some-> @!node
+                js/$
+                (ocall "popover" "toggle")))
+      :reagent-render
+      (fn [[element attributes & rest]]
+        [element (-> attributes
+                     (assoc :data-html true)
+                     (assoc :data-container "body")
+                     (assoc :ref (fn [e] (reset! !node e)))
+                     (update :data-content server/render-to-static-markup)) rest])})))
 
 (defn inner-tooltip []
   (fn [parent-data show-atom content]
@@ -63,24 +49,27 @@
                  :data-content [:div [:h1 Hello] [:h4 Goodbye]]} Hover-Over-Me]]"
   []
   (let [mystate (reagent/atom {})
-        show?   (reagent/atom false)]
+        show?   (reagent/atom false)
+        !node   (atom nil)]
     (reagent/create-class
      {:name "Tooltip"
       :component-did-mount
-      (fn [this]
-        (let [bb (ocall (dom/dom-node this) "getBoundingClientRect")]
-          (swap! mystate assoc
-                 :width (oget bb "width")
-                 :height (oget bb "height")
-                 :left (oget bb "left")
-                 :right (oget bb "right")
-                 :top (oget bb "top")
-                 :bottom (oget bb "bottom"))))
+      (fn [_this]
+        (when-let [node @!node]
+          (let [bb (ocall node "getBoundingClientRect")]
+            (swap! mystate assoc
+                   :width (oget bb "width")
+                   :height (oget bb "height")
+                   :left (oget bb "left")
+                   :right (oget bb "right")
+                   :top (oget bb "top")
+                   :bottom (oget bb "bottom")))))
       :component-did-update
       (fn [this])
       :reagent-render
       (fn [[element attributes & rest]]
         [element (-> attributes
+                     (assoc :ref (fn [e] (reset! !node e)))
                      (assoc :on-mouse-enter (fn []
                                               (do
                                                 (if-let [f (:on-mouse-enter attributes)] (f))
