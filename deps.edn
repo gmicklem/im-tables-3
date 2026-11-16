@@ -29,7 +29,7 @@
         ;; dependencies and stays on the last Clojars release. tools.build leaves git
         ;; dependencies out of the pom, so a SNAPSHOT jar built now does not name imcljs.
         org.intermine/imcljs       {:git/url "https://github.com/gmicklem/imcljs.git"
-                                    :git/sha "98c0f103bbb87812c8f948c7d7478ad349298957"} ; 1.7.0-SNAPSHOT
+                                    :git/sha "d96a3ebbe242ac9087113946bb7b3366399f2cae"} ; 1.7.0-SNAPSHOT, d96a3eb: blank query attributes omitted from the XML
         com.andrewmcveigh/cljs-time {:mvn/version "0.5.2"}}
 
  :aliases
