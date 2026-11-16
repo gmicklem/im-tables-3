@@ -435,20 +435,35 @@
                (->> res :results (map :item) (remove nil?) sort)
                res)))) ; false when too many results and empty list when no possible values.
 
+;; Attribute types (see the model's `attributes`) whose possible values are never offered in
+;; the filter UI: the date constraint input is a date picker, and a ClobAccess attribute is
+;; long text (e.g. Sequence.residues). Asking the server to summarise them is wasted work,
+;; for a Date path two requests (a size 1 count, then the values) [im-7os.45].
+(def non-enumerable-types
+  #{"java.util.Date" "org.intermine.objectstore.query.ClobAccess"})
+
+(defn fetch-possible-values-fx
+  "The effects of :main/fetch-possible-values: a request for the unique values of the
+  attribute path `view`, or nothing for a path that is a class (no values to list) or has
+  one of the `non-enumerable-types`."
+  [db loc view temp-query?]
+  (let [query (get db (if temp-query? :temp-query :query))
+        model (assoc (get-in db [:service :model]) :type-constraints (:where query))]
+    (cond-> {:db db}
+      (and (not (im-path/class? model view))
+           (not (non-enumerable-types (im-path/data-type model view))))
+      (assoc :im-tables/im-operation {:on-success [:main/store-possible-values loc view]
+                                      :op (partial fetch/unique-values
+                                                   (get db :service)
+                                                   (assoc query :select [view])
+                                                   view
+                                                   1000)}))))
+
 (reg-event-fx
  :main/fetch-possible-values
  (sandbox)
  (fn [{db :db} [_ loc view temp-query?]]
-   (let [query (get db (if temp-query? :temp-query :query))
-         model (assoc (get-in db [:service :model]) :type-constraints (:where query))]
-     (cond-> {:db db}
-       (not (im-path/class? model view))
-       (assoc :im-tables/im-operation {:on-success [:main/store-possible-values loc view]
-                                       :op (partial fetch/unique-values
-                                                    (get db :service)
-                                                    (assoc query :select [view])
-                                                    view
-                                                    1000)})))))
+   (fetch-possible-values-fx db loc view temp-query?)))
 
 (reg-event-db
  :main/save-column-summary
