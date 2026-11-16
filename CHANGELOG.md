@@ -1,3 +1,8 @@
+## Unreleased
+
+- Fix the filter menu's "Add More" and "Apply" buttons (and the blank constraint's submit) calling `re-frame.core/dispatch` with two arguments
+- Update binaryage/oops 0.7.0 -> 0.7.2: the 0.7.0 dynamic access macros call `goog.isBoolean`, which current Closure no longer provides (dev builds threw on every render)
+
 ## 0.15.0 (2022-11-28)
 
 - Expand export modal functionality to support wider range of formats, preview and modifying contents

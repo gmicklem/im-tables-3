@@ -285,9 +285,9 @@
         consts (subscribe [:filter-manager/filters loc])]
     (fn [loc view state]
       (let [model (assoc @model :type-constraints @consts)
-            submit-constraint (fn [] (dispatch
-                                      [:filters/add-constraint loc @state]
-                                      (reset! state {:path view :op "=" :value nil})))
+            submit-constraint (fn []
+                                (dispatch [:filters/add-constraint loc @state])
+                                (reset! state {:path view :op "=" :value nil}))
             on-constraint-change (fn [new-const]
                                    (swap! state update-constraint new-const))
             on-change (fn [v]
@@ -372,9 +372,9 @@
          [:div.btn-toolbar.pull-right
           [:div.btn-group
            [:button.btn.btn-default
-            {:on-click (fn [] (dispatch
-                               [:filters/add-constraint loc @blank-constraint-atom]
-                               (reset! blank-constraint-atom {:path view :op "=" :value nil})))
+            {:on-click (fn []
+                         (dispatch [:filters/add-constraint loc @blank-constraint-atom])
+                         (reset! blank-constraint-atom {:path view :op "=" :value nil}))
              :type "button"} "Add More"]]
 
           [:div.btn-group
@@ -384,9 +384,8 @@
                          (when (or (not-empty (:value @blank-constraint-atom))
                                    (not-empty (:values @blank-constraint-atom))
                                    (operators-no-value (:op @blank-constraint-atom)))
-                           (dispatch
-                            [:filters/add-constraint loc @blank-constraint-atom]
-                            (reset! blank-constraint-atom {:path view :op "=" :value nil}))))
+                           (dispatch [:filters/add-constraint loc @blank-constraint-atom])
+                           (reset! blank-constraint-atom {:path view :op "=" :value nil})))
              ; don't put :data-toggle "dropdown" in here, it stops
              ; the form submitting.... silently. Nice.
              :value "Apply"}]]]]))))

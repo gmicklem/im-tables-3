@@ -22,7 +22,7 @@
         re-frame/re-frame          {:mvn/version "1.4.7"}
         reagent/reagent            {:mvn/version "1.2.0"}
         joshkh/ctrlz               {:mvn/version "0.3.0"}
-        binaryage/oops             {:mvn/version "0.7.0"}
+        binaryage/oops             {:mvn/version "0.7.2"}
         inflections/inflections    {:mvn/version "0.13.2"}
         ;; Git dependency until imcljs 1.7.0 is on Clojars (the last release there is 1.6.0);
         ;; then switch back to {:mvn/version "1.7.0"}. project.clj (lein) cannot use git

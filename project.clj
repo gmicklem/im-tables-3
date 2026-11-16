@@ -14,7 +14,7 @@
                  [cljsjs/react-dom "18.3.1-1"]
                  [cljsjs/highlight "11.7.0-0"]
                  [joshkh/ctrlz "0.3.0"]
-                 [binaryage/oops "0.7.0"]
+                 [binaryage/oops "0.7.2"]
                  [inflections "0.13.2"]
                  ;; lein cannot use git dependencies, so it stays on the last Clojars release; deps.edn
                  ;; pins imcljs 1.7.0-SNAPSHOT by git sha until 1.7.0 is released (gate depcheck
