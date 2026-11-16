@@ -19,20 +19,21 @@
                       :url (fn [{:keys [mine class objectId] :as _vocab}]
                              (string/join "/" [nil mine "report" class objectId]))}}})
 
-;; The flymine-* configs below, and subclass-config, outer-join-config and true-false-config,
-;; are about Drosophila data (eve, runt, allele and expression data that HumanMine lacks); the
-;; rest of the demo uses HumanMine.
-(def flymine-config
-  {:service {:root "https://www.flymine.org/flymine"}
+;; Every demo config below uses HumanMine, the default test mine (FlyMine only when a test is
+;; about Drosophila data or switching between mines; nothing in this demo needs that).
+(def humanmine-lookup-config
+  {:service {:root "https://www.humanmine.org/humanmine"}
    :query {:from "Gene"
            :select ["symbol"
                     "secondaryIdentifier"
-                    "primaryIdentifier"]
+                    "primaryIdentifier"
+                    "organism.name"
+                    "length"]
            :where [{:path "Gene"
                     :op "LOOKUP"
-                    :value "eve"}]}
+                    :value "BRCA1"}]}
    :settings {:pagination {:limit 10}
-              :links {:vocab {:mine "flymine"}
+              :links {:vocab {:mine "humanmine"}
                       :url (fn [{:keys [mine class objectId] :as _vocab}]
                              (string/join "/" [nil mine "report" class objectId]))}}})
 
@@ -88,7 +89,7 @@
 
 ;; Query with subclass constraint
 (def subclass-config
-  {:service {:root "https://www.flymine.org/flymine"}
+  {:service {:root "https://www.humanmine.org/humanmine"}
    :query {:from "Gene"
            :select ["Gene.secondaryIdentifier",
                     "Gene.symbol",
@@ -96,21 +97,21 @@
                     "Gene.organism.name",
                     "Gene.interactions.participant2.alleles.primaryIdentifier",
                     "Gene.interactions.participant2.alleles.symbol",
-                    "Gene.interactions.participant2.alleles.alleleClass",
+                    "Gene.interactions.participant2.alleles.type",
                     "Gene.interactions.participant2.alleles.organism.name"]
            :where [{:path "Gene"
                     :op "LOOKUP"
-                    :value "eve"}
+                    :value "BRCA1"}
                    {:path "Gene.interactions.participant2"
                     :type "Gene"}]}
    :settings {:pagination {:limit 10}
               :compact true
-              :links {:vocab {:mine "flymine"}
+              :links {:vocab {:mine "humanmine"}
                       :url (fn [{:keys [mine class objectId] :as _vocab}]
                              (string/join "/" [nil mine "report" class objectId]))}}})
 
 (def outer-join-config
-  {:service {:root "https://www.flymine.org/flymine"}
+  {:service {:root "https://www.humanmine.org/humanmine"}
    :query {:from "Gene"
            :select ["Gene.secondaryIdentifier",
                     "Gene.symbol",
@@ -118,20 +119,20 @@
                     "Gene.organism.name",
                     "Gene.interactions.participant2.alleles.primaryIdentifier",
                     "Gene.interactions.participant2.alleles.symbol",
-                    "Gene.interactions.participant2.alleles.alleleClass",
+                    "Gene.interactions.participant2.alleles.type",
                     "Gene.interactions.participant2.alleles.organism.name"]
            :where [{:path "Gene"
                     :op "LOOKUP"
-                    :value "eve"}
+                    :value "BRCA1"}
                    {:path "Gene.interactions.participant2"
                     :type "Gene"}
                    {:path "Gene.interactions.participant2.alleles.symbol"
                     :op "CONTAINS"
-                    :value "ab"}]
+                    :value "tm1"}]
            :joins ["interactions"]}
    :settings {:pagination {:limit 10}
               :compact true
-              :links {:vocab {:mine "flymine"}
+              :links {:vocab {:mine "humanmine"}
                       :url (fn [{:keys [mine class objectId] :as _vocab}]
                              (string/join "/" [nil mine "report" class objectId]))}}})
 
@@ -153,21 +154,20 @@
                       :url (fn [{:keys [mine class objectId] :as _vocab}]
                              (string/join "/" [nil mine "report" class objectId]))}}})
 
-;; This query has a very wide column, making it great for testing overflow.
-(def flymine-wide-config
-  {:service {:root "https://www.flymine.org/flymine"}
+;; This query has a very wide column (the gene sequence), making it great for testing overflow.
+(def humanmine-wide-config
+  {:service {:root "https://www.humanmine.org/humanmine"}
    :query {:from "Gene"
            :select ["primaryIdentifier"
                     "symbol"
-                    "regulatoryRegions.primaryIdentifier"
-                    "regulatoryRegions.chromosome.primaryIdentifier"
-                    "regulatoryRegions.sequenceOntologyTerm.name"
-                    "regulatoryRegions.chromosomeLocation.end"
-                    "regulatoryRegions.chromosomeLocation.start"
-                    "regulatoryRegions.dataSets.dataSource.name"
-                    "regulatoryRegions.sequence.residues"]}
+                    "organism.name"
+                    "description"
+                    "sequence.residues"]
+           :where [{:path "Gene.organism.name"
+                    :op "="
+                    :value "Homo sapiens"}]}
    :settings {:pagination {:limit 10}
-              :links {:vocab {:mine "flymine"}
+              :links {:vocab {:mine "humanmine"}
                       :url (fn [{:keys [mine class objectId] :as _vocab}]
                              (string/join "/" [nil mine "report" class objectId]))}}})
 
@@ -199,24 +199,21 @@
 
 ;; One of the columns contain True/False values.
 (def true-false-config
-  {:service {:root "https://www.flymine.org/flymine"}
+  {:service {:root "https://www.humanmine.org/humanmine"}
    :query {:from "Gene"
-           :select ["Gene.name",
-                    "Gene.mRNAExpressionResults.stageRange",
-                    "Gene.mRNAExpressionResults.expressed",
-                    "Gene.mRNAExpressionResults.mRNAExpressionTerms.name",
-                    "Gene.mRNAExpressionResults.dataSet.dataSource.name"]
+           :select ["Gene.symbol",
+                    "Gene.proteins.primaryIdentifier",
+                    "Gene.proteins.name",
+                    "Gene.proteins.isFragment",
+                    "Gene.proteins.isUniprotCanonical"]
            :where [{:path "Gene.organism.name",
                     :op "=",
-                    :value "Drosophila melanogaster"}
-                   {:path "Gene.mRNAExpressionResults.dataSet.name",
-                    :op "=",
-                    :value "BDGP in situ data set"}
+                    :value "Homo sapiens"}
                    {:path "Gene",
                     :op "LOOKUP",
-                    :value "runt"}]}
+                    :value "NOTCH1"}]}
    :settings {:pagination {:limit 10}
-              :links {:vocab {:mine "flymine"}
+              :links {:vocab {:mine "humanmine"}
                       :url (fn [{:keys [mine class objectId] :as _vocab}]
                              (string/join "/" [nil mine "report" class objectId]))}}})
 
