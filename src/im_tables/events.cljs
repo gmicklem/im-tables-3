@@ -19,7 +19,7 @@
             [clojure.set :as set]
             [cljs.core.async :refer [close! <! chan]]
             [reagent.core :as r]
-            [im-tables.utils :refer [response->error constraints->logic clean-derived-query rows->maps]]
+            [im-tables.utils :refer [response->error constraints->logic ensure-constraint-logic clean-derived-query rows->maps]]
             [im-tables.views.dashboard.save :refer [generate-dialog]]))
 
 (joshkh.undo/undo-config!
@@ -195,10 +195,11 @@
  [(sandbox) (undoable)]
  (fn [{db :db} [_ loc]]
    (let [db (update-in db [:temp-query :constraintLogic]
-                       ;; Recompute the constraintLogic if it's empty.
-                       ;; (Can only occur if the user was evil and deleted it.)
-                       (comp #(or % (constraints->logic (get-in db [:temp-query :where])))
-                             not-empty trim))
+                       ;; Recompute the constraintLogic if it's empty or missing. (It is
+                       ;; missing when the query came from XML without a constraintLogic
+                       ;; attribute, and `trim` of nil threw "Cannot read properties of
+                       ;; null (reading 'trim')" every time a filter dropdown closed.)
+                       ensure-constraint-logic (get-in db [:temp-query :where]))
          added (not-empty (set/difference (set (:where (:temp-query db)))
                                           (set (:where (:query db)))))
          removed (not-empty (set/difference (set (:where (:query db)))

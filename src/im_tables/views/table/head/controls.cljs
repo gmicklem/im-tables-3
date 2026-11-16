@@ -8,7 +8,7 @@
             [clojure.string :as string]
             [clojure.set :as set]
             [oops.core :refer [oget ocall ocall! oget+ oset!]]
-            [im-tables.utils :refer [on-event pretty-number display-name place-below!]]
+            [im-tables.utils :refer [on-event pretty-number display-name place-below! react-select-id?]]
             [goog.string :as gstring]
             ;; sets js/Select, used below
             [cljsjs.react-select]))
@@ -553,7 +553,12 @@
         !dropdown-menu (atom nil)
         last-clicked-id (atom nil)
         listen-last-click (fn [evt]
-                            (reset! last-clicked-id (oget evt :target :id)))]
+                            (reset! last-clicked-id (oget evt :target :id)))
+        stop-listening (fn []
+                         (.removeEventListener js/document "mousedown" listen-last-click)
+                         ;; Forget the last click, or a stale react-select id would
+                         ;; keep vetoing every later close of this dropdown.
+                         (reset! last-clicked-id nil))]
     (fn [loc view right?]
       (let [active-filters? (not-empty (filter (partial constraint-has-path? view) (:where @query)))]
         [:span.dropdown
@@ -565,9 +570,11 @@
                    ;; it won't get affected by the overflow property of the
                    ;; filter menu. To avoid closing the dropdown when clicking
                    ;; the Select component, we check the last clicked element.
-                   (if (string/starts-with? @last-clicked-id "react-select")
+                   ;; Nothing has been clicked when the dropdown is closed with the
+                   ;; keyboard (Escape) or programmatically, so the id can be nil.
+                   (if (react-select-id? @last-clicked-id)
                      false
-                     (do (.removeEventListener js/document "mousedown" listen-last-click)
+                     (do (stop-listening)
                          ;; Reset the blank constraint atom when the dropdown is closed
                          (reset! blank-constraint-atom {:path view :op "=" :value nil})
                          ;; *Try* to save the changes every time the dropdown is
@@ -579,6 +586,7 @@
                 (on-event
                  "show.bs.dropdown"
                  (fn []
+                   (reset! last-clicked-id nil)
                    (.addEventListener js/document "mousedown" listen-last-click)
                    (when (nil? @possible-values)
                      (dispatch [:main/fetch-possible-values loc view false]))
