@@ -5,7 +5,7 @@
             [inflections.core :refer [plural]]
             [imcljs.path :as path :refer [walk class]]
             [im-tables.components.bootstrap :refer [modal]]
-            [im-tables.utils :refer [on-event]]))
+            [im-tables.utils :refer [on-event default-list-name]]))
 
 (defn join-with-arrows [col]
   (clojure.string/join " > " col))
@@ -50,7 +50,7 @@
       "Save"]]))
 
 (defn generate-dialog [loc {:keys [type count query picking?] :as details}]
-  (let [state (reagent/atom {:name (str (name type) " List (" (.toString (js/Date.)) ")")
+  (let [state (reagent/atom {:name (default-list-name type)
                              :description ""})
         on-submit (fn []
                     (dispatch [:imt.io/save-list loc (:name @state) (:query details) @state])
