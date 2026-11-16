@@ -22,8 +22,7 @@
                  [org.intermine/imcljs "1.6.0"]
                  ;; There is no cljsjs build of react-select 5 (deps.edn builds use npm 5.10.2),
                  ;; so lein builds stay on 2.4.4, which still runs on React 18.
-                 [cljsjs/react-select "2.4.4-0" :exclusions [cljsjs/react cljsjs/react-dom]]
-                 [com.andrewmcveigh/cljs-time "0.5.2"]]
+                 [cljsjs/react-select "2.4.4-0" :exclusions [cljsjs/react cljsjs/react-dom]]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-ancient "0.6.15"]

@@ -3,10 +3,8 @@
             [inflections.core :refer [plural]]
             [imcljs.path :as path]
             [clojure.string :as string]
-            [cljs-time.core :as time]
-            [cljs-time.coerce :as time-coerce]
-            [cljs-time.format :as time-format]
             [goog.json :as json]
+            [goog.string :as gstring]
             [goog.i18n.NumberFormat.Format]
             [goog.style :as gstyle]
             [goog.dom :as gdom])
@@ -139,14 +137,26 @@
 
 ;; Milliseconds as well (the same format BlueGenes uses for its default list names): a mine
 ;; refuses a second list with an existing name (400), and the old `Date.toString` default
-;; had a resolution of one second.
-(def list-name-formatter (time-format/formatter "dd MMM yyyy HH:mm:ss.SSS"))
+;; had a resolution of one second. UTC, like the cljs-time formatter this replaces
+;; [im-7os.21].
+(def ^:private month-abbreviations
+  ["Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"])
+
+(defn- format-list-name-date
+  "\"dd MMM yyyy HH:mm:ss.SSS\" in UTC, e.g. \"16 Nov 2026 12:34:56.789\"."
+  [date]
+  (let [pad (fn [n width] (gstring/padNumber n width))]
+    (str (pad (.getUTCDate date) 2) " "
+         (month-abbreviations (.getUTCMonth date)) " "
+         (pad (.getUTCFullYear date) 4) " "
+         (pad (.getUTCHours date) 2) ":"
+         (pad (.getUTCMinutes date) 2) ":"
+         (pad (.getUTCSeconds date) 2) "."
+         (pad (.getUTCMilliseconds date) 3))))
 
 (defn default-list-name
   "The default name offered in the save dialog, e.g. \"Gene List (16 Nov 2026 12:34:56.789)\".
-  `date` is a js/Date or anything cljs-time can coerce; defaults to now."
-  ([type] (default-list-name type (time/now)))
+  `date` is a js/Date (or epoch milliseconds); defaults to now."
+  ([type] (default-list-name type (js/Date.)))
   ([type date]
-   (str (name type) " List ("
-        (time-format/unparse list-name-formatter (time-coerce/to-date-time date))
-        ")")))
+   (str (name type) " List (" (format-list-name-date (js/Date. date)) ")")))
