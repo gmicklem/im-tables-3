@@ -1,5 +1,6 @@
 (ns im-tables.utils
   (:require [oops.core :refer [ocall oget]]
+            [reagent.core :as reagent]
             [inflections.core :refer [plural]]
             [imcljs.path :as path]
             [clojure.string :as string]
@@ -10,6 +11,17 @@
             [goog.dom :as gdom])
   (:import [goog.i18n NumberFormat]
            [goog.i18n.NumberFormat Format]))
+
+(defn unsafe-html
+  "Value for :dangerouslySetInnerHTML. Reagent 1.3+ (and 2.x) silently drops a plain
+  {:__html s} map and only accepts reagent.core/unsafe-html; reagent 1.2 has no such
+  function and takes the plain map. This works on both."
+  [s]
+  ;; `resolve` is expanded at compile time and is nil on reagent 1.2, so there is no
+  ;; undeclared-var warning for the reference to the missing function.
+  (if-let [f (resolve 'reagent.core/unsafe-html)]
+    (@f s)
+    #js {:__html s}))
 
 (let [numformat (NumberFormat. Format/DECIMAL)]
   (defn pretty-number

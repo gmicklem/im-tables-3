@@ -1,7 +1,6 @@
 (ns im-tables.views.table.head.controls
   (:require [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as reagent]
-            [reagent.dom :as dom]
             [im-tables.views.graphs.histogram :as histogram]
             [im-tables.views.common :refer [no-value]]
             [imcljs.path :as path]
@@ -90,9 +89,10 @@
       (name @!scale-type)]]))
 
 (defn force-close
-  "Force a dropdown to close."
-  [component]
-  (-> (js/$ (dom/dom-node component))
+  "Force the bootstrap dropdown that contains the DOM node to close. The node comes
+  from the event (`currentTarget`), as reagent.dom/dom-node is gone in reagent 2."
+  [node]
+  (-> (js/$ node)
       (ocall! "closest" ".dropdown")
       (ocall! "children" ".dropdown-toggle")
       (ocall! "dropdown" "toggle")))
@@ -356,11 +356,10 @@
     (fn [loc view]
       (let [active-filters (for [[i const] (map-indexed vector (:where @query))
                                  :when (constraint-has-path? view const)]
-                             [constraint loc view const i])
-            dropdown (reagent/current-component)]
+                             [constraint loc view const i])]
         [:form.form.filter-view {:on-submit (fn [e]
                                               (ocall e "preventDefault")
-                                              (force-close dropdown))}
+                                              (force-close (oget e :currentTarget)))}
          [:div.alert.alert-success
           (if (seq active-filters)
             (into [:div [:h4 "Active filters:"]] active-filters)
@@ -416,8 +415,7 @@
 (defn numerical-column-summary []
   (fn [loc view response trimmer]
     (let [results (:results response)
-          {:keys [min max average stdev]} (first results)
-          close-fn (partial force-close (reagent/current-component))]
+          {:keys [min max average stdev]} (first results)]
       [:form.form.column-summary {:on-submit (fn [e] (ocall e "preventDefault"))}
        [column-summary-title loc view response :numerical? true]
        [histogram/numerical-histogram results @trimmer]
@@ -463,9 +461,9 @@
         [:div.btn-toolbar.column-summary-toolbar
          [:button.btn.btn-primary
           {:type "button"
-           :on-click (fn []
+           :on-click (fn [e]
                        (dispatch [:main/apply-numerical-filter loc view @trimmer])
-                       (close-fn)
+                       (force-close (oget e :currentTarget))
                        (reset! trimmer {}))}
           [:i.fa.fa-filter]
           (str " Filter")]]]])))

@@ -7,7 +7,8 @@
             [reagent.dom.server :as server]
             [oops.core :refer [ocall oget]]
             [imcljs.path :as impath]
-            [im-tables.views.table.error :as error]))
+            [im-tables.views.table.error :as error]
+            [im-tables.utils :refer [unsafe-html]]))
 
 (defn custom-modal []
   (fn [loc {:keys [header body footer extra-class no-fade]}]
@@ -186,7 +187,7 @@
              ; If static (optimised) then only show an HTML representations of the React components
             [:div {:class static-class}
               ; Force the dashboard buttons to be just HTML (their lights are on but no one is home)
-             [:div {:dangerouslySetInnerHTML {"__html" (server/render-to-static-markup [dashboard/main location @response @pagination])}}]
+             [:div {:dangerouslySetInnerHTML (unsafe-html (server/render-to-static-markup [dashboard/main location @response @pagination]))}]
              [table/handle-states location @response
               [:div.table-container
                [:table.table.table-condensed.table-bordered.table-striped
