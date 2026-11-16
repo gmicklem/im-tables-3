@@ -1,3 +1,11 @@
+## Unreleased
+
+- The filter dropdown and Manage Filters no longer ask the server for the possible values of Date (and long text, ClobAccess) attributes: the date input ignores them
+- Code generation: the code block names its highlight.js language explicitly (`language-ruby`, ...) instead of relying on auto-detection, which took Ruby for Perl; the generated JavaScript with HTML is highlighted as xml
+- Remove the com.andrewmcveigh/cljs-time dependency: the RFC 822 date in the bug-report mail and the default list name in the save dialog now use `js/Date` (the list name keeps the format `dd MMM yyyy HH:mm:ss.SSS`, UTC; the mail date is now `Date.toUTCString`, e.g. `Mon, 16 Nov 2026 12:34:56 GMT`)
+- Fix the filter menu's "Add More" and "Apply" buttons (and the blank constraint's submit) calling `re-frame.core/dispatch` with two arguments
+- Update binaryage/oops 0.7.0 -> 0.7.2: the 0.7.0 dynamic access macros call `goog.isBoolean`, which current Closure no longer provides (dev builds threw on every render)
+
 ## 0.15.0 (2022-11-28)
 
 - Expand export modal functionality to support wider range of formats, preview and modifying contents

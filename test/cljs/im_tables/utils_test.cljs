@@ -46,3 +46,15 @@
     (testing "without a date it uses the current time"
       (is (re-matches #"Gene List \(\d\d \w{3} \d{4} \d\d:\d\d:\d\d\.\d{3}\)"
                       (utils/default-list-name "Gene"))))))
+
+;; The formatting is hand-written (cljs-time was removed [im-7os.21]): check the padding and
+;; the month names at both ends of the year, and that the time zone does not matter.
+(deftest default-list-name-pads-and-uses-utc
+  (testing "single digits are zero padded"
+    (is (= "Gene List (05 Jan 2026 03:04:05.006)"
+           (utils/default-list-name "Gene" (js/Date. (.UTC js/Date 2026 0 5 3 4 5 6))))))
+  (testing "December, end of the day"
+    (is (= "Gene List (31 Dec 2025 23:59:59.999)"
+           (utils/default-list-name "Gene" (js/Date. (.UTC js/Date 2025 11 31 23 59 59 999))))))
+  (testing "epoch milliseconds are accepted"
+    (is (= "Gene List (01 Jan 1970 00:00:00.000)" (utils/default-list-name "Gene" 0)))))

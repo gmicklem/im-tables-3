@@ -22,15 +22,14 @@
         re-frame/re-frame          {:mvn/version "1.4.7"}
         reagent/reagent            {:mvn/version "1.2.0"}
         joshkh/ctrlz               {:mvn/version "0.3.0"}
-        binaryage/oops             {:mvn/version "0.7.0"}
+        binaryage/oops             {:mvn/version "0.7.2"}
         inflections/inflections    {:mvn/version "0.13.2"}
         ;; Git dependency until imcljs 1.7.0 is on Clojars (the last release there is 1.6.0);
         ;; then switch back to {:mvn/version "1.7.0"}. project.clj (lein) cannot use git
         ;; dependencies and stays on the last Clojars release. tools.build leaves git
         ;; dependencies out of the pom, so a SNAPSHOT jar built now does not name imcljs.
         org.intermine/imcljs       {:git/url "https://github.com/gmicklem/imcljs.git"
-                                    :git/sha "d96a3ebbe242ac9087113946bb7b3366399f2cae"} ; 1.7.0-SNAPSHOT, d96a3eb: blank query attributes omitted from the XML
-        com.andrewmcveigh/cljs-time {:mvn/version "0.5.2"}}
+                                    :git/sha "d96a3ebbe242ac9087113946bb7b3366399f2cae"}} ; 1.7.0-SNAPSHOT, d96a3eb: blank query attributes omitted from the XML
 
  :aliases
  {;; Classpath for shadow-cljs (see shadow-cljs.edn :deps). Clojure 1.11 or later is needed

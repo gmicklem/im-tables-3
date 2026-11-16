@@ -3,8 +3,6 @@
             [reagent.core :as reagent]
             [imcljs.query :refer [->xml]]
             [oops.core :refer [ocall oget]]
-            [cljs-time.core :as time]
-            [cljs-time.format :refer [unparse formatters]]
             [goog.string :as gstring]
             [goog.json :as json]
             [im-tables.utils :refer [clj->json]]
@@ -20,7 +18,7 @@
                                  support-email)
         current-url (oget js/window :location :href)
         service-url (:root @(subscribe [:assets/service loc]))
-        current-date (unparse (formatters :rfc822) (time/now))]
+        current-date (.toUTCString (js/Date.))]
     (str "mailto:" maintainer-email
          "?subject=" (gstring/urlEncode "[IMTABLES] - Error running query")
          (when cc-support?
