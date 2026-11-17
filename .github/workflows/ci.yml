@@ -1,0 +1,205 @@
+# Continuous integration for im-tables-3. It gates Renovate's dependency pull requests
+# and runs the same steps as the local gate script (scripts/gate-im-tables.sh in the
+# intermine-planning repo): cljfmt, the unit tests, the advanced (release) build of the
+# whole library, a headless-browser check of that build, and the library jar.
+#
+# The tests in im-tables.core-test query a live mine (HumanMine by default). CI does not
+# depend on a public mine: the whole test build is compiled on every run (so every test
+# namespace is checked to compile), but only the offline namespaces (utils-test,
+# codegen-test, events-test) are run. Start the workflow by hand ("Run workflow") with
+# live-tests ticked to run all of them against HumanMine as well.
+name: CI
+
+on:
+  push:
+    branches: [maint-2026, 'maint/**']
+    paths-ignore: ['**/*.md', 'docs/**']
+  pull_request:
+    paths-ignore: ['**/*.md', 'docs/**']
+  workflow_dispatch:
+    inputs:
+      live-tests:
+        description: Also run the tests that query the live HumanMine (im-tables.core-test)
+        type: boolean
+        default: false
+
+# A newer push to the same branch or pull request supersedes a running build.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash   # bash -eo pipefail, so `cmd | tee log` fails when cmd fails
+
+env:
+  # Where the steps tee their output; uploaded as an artifact when the job fails.
+  CI_LOG_DIR: ci-logs
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      # The Clojure CLI comes from the official installer on the Clojure core team's
+      # release page (same as BlueGenes' CI), checked against a pinned sha256. To
+      # upgrade: pick a release of https://github.com/clojure/brew-install, copy the
+      # sha256 of its linux-install.sh (the asset's digest) here.
+      - name: Install the Clojure CLI
+        env:
+          CLOJURE_VERSION: "1.12.6.1673"
+          INSTALLER_SHA256: "5ae63b082ed33bf4c29bf1a8317c5c15249d1bc753676b2f5177fb3804ad6f77"
+        run: |
+          dir=$(mktemp -d)
+          curl -fsSL --retry 5 --retry-connrefused -o "$dir/linux-install.sh" \
+            "https://github.com/clojure/brew-install/releases/download/${CLOJURE_VERSION}/linux-install.sh"
+          echo "${INSTALLER_SHA256}  $dir/linux-install.sh" | sha256sum -c -
+          (cd "$dir" && bash linux-install.sh --prefix "$HOME/.local/clojure")
+          echo "$HOME/.local/clojure/bin" >> "$GITHUB_PATH"
+          rm -rf "$dir"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      # ~/.gitlibs holds the imcljs git dependency.
+      - name: Cache Maven and gitlibs
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+          key: clj-deps-${{ runner.os }}-${{ hashFiles('deps.edn') }}
+          restore-keys: |
+            clj-deps-${{ runner.os }}-
+
+      - name: Tool versions and log directory
+        run: |
+          java -version
+          clojure --version
+          echo "node $(node -v), npm $(npm -v)"
+          mkdir -p "$CI_LOG_DIR"
+
+      - name: Check formatting (cljfmt)
+        run: clojure -M:fmt check 2>&1 | tee "$CI_LOG_DIR/fmt.log"
+
+      - name: Install npm packages
+        run: npm ci 2>&1 | tee "$CI_LOG_DIR/npm-ci.log"
+
+      # Compiles every test namespace, runs the offline ones. A cljs.test summary and
+      # no failures or errors are required, so a run that finds no tests cannot pass.
+      - name: Unit tests (shadow-cljs :test, node)
+        run: |
+          npx shadow-cljs compile test 2>&1 | tee "$CI_LOG_DIR/test-compile.log"
+          node out/test.js --test=im-tables.utils-test,im-tables.codegen-test,im-tables.events-test 2>&1 | tee "$CI_LOG_DIR/test.log"
+          sed 's/\x1b\[[0-9;]*m//g' "$CI_LOG_DIR/test.log" > "$CI_LOG_DIR/test.plain.log"
+          grep -E '^Ran [0-9]+ tests containing [0-9]+ assertions' "$CI_LOG_DIR/test.plain.log"
+          grep -E '^0 failures, 0 errors' "$CI_LOG_DIR/test.plain.log"
+
+      # Needs the live HumanMine (https://www.humanmine.org/humanmine, read-only queries).
+      - name: Unit tests against the live HumanMine (manual runs only)
+        if: github.event_name == 'workflow_dispatch' && inputs.live-tests
+        run: |
+          node out/test.js 2>&1 | tee "$CI_LOG_DIR/test-live.log"
+          sed 's/\x1b\[[0-9;]*m//g' "$CI_LOG_DIR/test-live.log" > "$CI_LOG_DIR/test-live.plain.log"
+          grep -E '^Ran [0-9]+ tests containing [0-9]+ assertions' "$CI_LOG_DIR/test-live.plain.log"
+          grep -E '^0 failures, 0 errors' "$CI_LOG_DIR/test-live.plain.log"
+
+      # Advanced compile of the whole library plus the demo page: proves every npm
+      # require resolves and that nothing breaks under advanced optimisations.
+      - name: Release build (shadow-cljs release app)
+        run: npx shadow-cljs release app 2>&1 | tee "$CI_LOG_DIR/release-app.log"
+
+      # Loads the advanced build in headless Chrome and checks that the cljsjs shims set
+      # their globals (react-select's Select, highlight.js with its 6 languages) and that
+      # im_tables.core.init runs without an uncaught error.
+      - name: Release build browser check (headless Chrome)
+        run: |
+          check="$PWD/$CI_LOG_DIR/shim-check.html"
+          cat > "$check" <<HTML
+          <!doctype html><html><body><div id="app"></div>
+          <script>
+          var errs = [];
+          window.addEventListener("error", function (e) { errs.push(String(e.message)); });
+          </script>
+          <script src="file://$PWD/resources/public/js/compiled/app.js"></script>
+          <script>
+          var r = {};
+          try {
+            // react-select 5 exports Select as a forwardRef object, not a function
+            r.Select = (typeof Select === "function" || (typeof Select === "object" && Select !== null)) ? "component" : typeof Select;
+            r.Creatable = (typeof Select.Creatable === "function" || typeof Select.Creatable === "object") ? "component" : typeof Select.Creatable;
+            r.langs = hljs.listLanguages().join(",");
+            var el = document.createElement("code"); el.className = "xml"; el.textContent = "<a b='c'>d</a>";
+            document.body.appendChild(el); hljs.highlightElement(el); r.highlighted = el.innerHTML.indexOf("hljs-") >= 0;
+            im_tables.core.init(); r.init = "ok";
+          } catch (e) { r.error = String(e); }
+          // Logged after a delay, so that errors from asynchronous start-up work are
+          // collected too.
+          setTimeout(function () {
+            r.uncaught = errs;
+            console.log("SHIMCHECK " + JSON.stringify(r));
+          }, 3000);
+          </script></body></html>
+          HTML
+          chrome=$(command -v google-chrome-stable || command -v google-chrome || command -v chromium || command -v chromium-browser)
+          "$chrome" --version
+          # Chrome writes the page's console output to stderr and does not exit by
+          # itself, so it is stopped by timeout (exit status 124 is expected).
+          timeout 30 "$chrome" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
+            --allow-file-access-from-files --no-first-run --enable-logging=stderr --v=0 \
+            --user-data-dir="$RUNNER_TEMP/chrome-profile" "file://$check" \
+            > "$CI_LOG_DIR/shim-check.chrome.log" 2>&1 || test $? -eq 124
+          line=$(grep -o 'SHIMCHECK {.*}' "$CI_LOG_DIR/shim-check.chrome.log" | head -1 | sed 's/", source.*//')
+          echo "$line"
+          node -e '
+            const r = JSON.parse(process.argv[1].replace(/^SHIMCHECK /, ""));
+            const want = {Select: "component", Creatable: "component", langs: "javascript,perl,python,ruby,java,xml", highlighted: true, init: "ok"};
+            const bad = Object.keys(want).filter(k => r[k] !== want[k]);
+            if (bad.length || r.error || (r.uncaught || []).length) { console.error("shim check failed:", bad.join(","), r.error || "", JSON.stringify(r.uncaught)); process.exit(1); }
+            console.log("shim check ok");
+          ' "$line"
+
+      # `jar` first compiles the stylesheet (lessc from node_modules), then packs the
+      # sources and public/css/im-tables.css; the checks are those of the gate.
+      - name: Library jar (clojure -T:build jar)
+        run: |
+          clojure -T:build jar 2>&1 | tee "$CI_LOG_DIR/jar.log"
+          version=$(tr -d '[:space:]' < VERSION)
+          jar="target/im-tables-$version.jar"
+          test -f "$jar"
+          unzip -Z1 "$jar" > "$CI_LOG_DIR/jar-contents.txt"
+          pom=$(unzip -p "$jar" META-INF/maven/org.intermine/im-tables/pom.xml)
+          problems=""
+          css_size=$(unzip -l "$jar" | awk '$4=="public/css/im-tables.css" {print $1}')
+          if [ -z "$css_size" ]; then problems="$problems css-missing"; elif [ "$css_size" -lt 5000 ]; then problems="$problems css-only-${css_size}-bytes"; fi
+          grep -qx 'im_tables/core.cljs' "$CI_LOG_DIR/jar-contents.txt" || problems="$problems missing:im_tables/core.cljs"
+          grep -qE '^shim/|^cljsjs/|^public/js/|^public/index.html|\.nfs|_test\.clj|\.class$' "$CI_LOG_DIR/jar-contents.txt" && problems="$problems shims-compiled-js-tests-classes-or-junk-in-jar"
+          echo "$pom" | grep -q '<groupId>org.intermine</groupId>' || problems="$problems pom-groupId"
+          echo "$pom" | grep -q '<artifactId>im-tables</artifactId>' || problems="$problems pom-artifactId"
+          echo "$pom" | grep -q "<version>$version</version>" || problems="$problems pom-version"
+          case "$version" in *-SNAPSHOT) ;; *) problems="$problems version-not-SNAPSHOT" ;; esac
+          echo "$pom" | grep -qE '<groupId>cljsjs</groupId>|<artifactId>(clojure|clojurescript|test)</artifactId>' && problems="$problems pom-lists-cljsjs-clojure-or-test"
+          if [ -n "$problems" ]; then echo "jar problems:$problems"; exit 1; fi
+          echo "$jar ok: $(grep -c '\.cljs$' "$CI_LOG_DIR/jar-contents.txt") cljs files, CSS $css_size bytes"
+
+      - name: Upload logs (failure)
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-logs
+          path: ${{ env.CI_LOG_DIR }}/
+          retention-days: 7
+          if-no-files-found: ignore
