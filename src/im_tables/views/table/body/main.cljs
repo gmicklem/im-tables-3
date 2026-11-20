@@ -3,6 +3,7 @@
             [reagent.core :as reagent]
             [clojure.string :refer [split join trim]]
             [im-tables.views.common :refer [no-value]]
+            [im-tables.utils :as utils]
             [oops.core :refer [ocall oget oset!]]
             [imcljs.path :as impath]
             [reagent.dom.server :as dom-server]
@@ -63,33 +64,43 @@
                                 props)
                          remaining])})))
 
+(defn external-link-attrs
+  "Attributes of the anchor of a cell that links outside the mine (see
+  utils/external-cell-link): a new tab, and no on-click, so the host's report-page
+  navigation does not run."
+  [href]
+  {:href href :target "_blank" :rel "noopener noreferrer"})
+
 (defn outer-join-table-cell [loc]
   (let [pop-el (reagent/atom nil)
         settings (subscribe [:settings/settings loc])]
     (fn [loc {:keys [id value] :as data}]
       (let [{:keys [on-click url vocab]} (get-in @settings [:links])
             item-details @(subscribe [:summary/item-details loc id])
-            link (url (merge data (:value item-details) vocab))]
+            link (url (merge data (:value item-details) vocab))
+            external-link (utils/external-cell-link data)]
         [:td {:ref (fn [p] (when p (reset! pop-el p)))} ; Store a reference so we can manually kill popups
          [poppable {:on-mouse-enter (fn [] (dispatch [:main/summarize-item loc data]))
                     :data-content (when (seq item-details)
                                     (->html (summary-table item-details)))}
           [:a
-           (merge
-            (when (and on-click (some? value))
-              {:on-click (fn []
-                           ; Call the provided on-click
-                           (on-click link)
-                           ; Side effect!!
-                           ; Destroy the popover in case the table is embedded in an SPA
-                           ; otherwise it will stick after page routes
-                           (-> @pop-el js/$
-                               (ocall :find "[data-trigger='hover']")
-                               (ocall :popover "destroy")))})
-            ;; URL is incomplete until summary has been fetched and
-            ;; `:value` key added, so avoid pointing to wrong URL.
-            (when (contains? item-details :value)
-              {:href link}))
+           (if external-link
+             (external-link-attrs external-link)
+             (merge
+              (when (and on-click (some? value))
+                {:on-click (fn []
+                             ; Call the provided on-click
+                             (on-click link)
+                             ; Side effect!!
+                             ; Destroy the popover in case the table is embedded in an SPA
+                             ; otherwise it will stick after page routes
+                             (-> @pop-el js/$
+                                 (ocall :find "[data-trigger='hover']")
+                                 (ocall :popover "destroy")))})
+              ;; URL is incomplete until summary has been fetched and
+              ;; `:value` key added, so avoid pointing to wrong URL.
+              (when (contains? item-details :value)
+                {:href link})))
            (if (some? value)
              (str value)
              [no-value])]]]))))
@@ -158,31 +169,34 @@
            [outer-join-table loc data view]
            ; otherwise a regular cell
            (let [item-details @(subscribe [:summary/item-details loc id])
-                 link (url (merge data (:value item-details) (get-in @settings [:links :vocab])))]
+                 link (url (merge data (:value item-details) (get-in @settings [:links :vocab])))
+                 external-link (utils/external-cell-link data)]
              [:span {:ref (fn [p] (when p (reset! pop-el p)))} ; Store a reference so we can manually kill popups
 
               [poppable {:on-mouse-enter (fn [] (dispatch [:main/summarize-item loc data]))
                          :data-content (when (seq item-details)
                                          (->html (summary-table item-details)))}
 
-               [:a (merge
-                    {:on-click (fn []
-                                 (when (and on-click (some? value))
-                                   ; Call the provided on-click
-                                   (on-click link)
-                                   ; Side effect!!
-                                   ; Destroy the popover in case the table is embedded in an SPA
-                                   ; otherwise it will stick after page routes
-                                   (-> @pop-el js/$
-                                       (ocall :find "[data-trigger='hover']")
-                                       (ocall :popover "destroy"))))}
-                    ;; URL is incomplete until summary has been fetched and
-                    ;; `:value` key added, so avoid pointing to wrong URL.
-                    (when (contains? item-details :value)
-                      {:href link}))
-                (if (some? value)
-                  (anchor-if-url value)
-                  [no-value])]]]))]))))
+               (if external-link
+                 [:a (external-link-attrs external-link) (str value)]
+                 [:a (merge
+                      {:on-click (fn []
+                                   (when (and on-click (some? value))
+                                     ; Call the provided on-click
+                                     (on-click link)
+                                     ; Side effect!!
+                                     ; Destroy the popover in case the table is embedded in an SPA
+                                     ; otherwise it will stick after page routes
+                                     (-> @pop-el js/$
+                                         (ocall :find "[data-trigger='hover']")
+                                         (ocall :popover "destroy"))))}
+                      ;; URL is incomplete until summary has been fetched and
+                      ;; `:value` key added, so avoid pointing to wrong URL.
+                      (when (contains? item-details :value)
+                        {:href link}))
+                  (if (some? value)
+                    (anchor-if-url value)
+                    [no-value])])]]))]))))
 
 (defn table-row [loc row]
   (into [:tr]

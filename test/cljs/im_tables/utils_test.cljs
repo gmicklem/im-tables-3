@@ -58,3 +58,44 @@
            (utils/default-list-name "Gene" (js/Date. (.UTC js/Date 2025 11 31 23 59 59 999))))))
   (testing "epoch milliseconds are accepted"
     (is (= "Gene List (01 Jan 1970 00:00:00.000)" (utils/default-list-name "Gene" 0)))))
+
+;; A Publication.pubMedId cell links straight to PubMed instead of the report page
+;; [im-9n4.61]. The cells are the tablerows cells of the mine: the same keys at the top
+;; level and inside an outer-join sub-table.
+(deftest external-cell-link-for-pubmed-ids
+  (testing "a pubMedId of a Publication links to PubMed, through any path"
+    (is (= "https://pubmed.ncbi.nlm.nih.gov/16381927"
+           (utils/external-cell-link {:column "DataSet.publication.pubMedId" :class "Publication"
+                                      :id 34000001 :value "16381927"})))
+    (is (= "https://pubmed.ncbi.nlm.nih.gov/1676470"
+           (utils/external-cell-link {:column "Gene.publications.pubMedId" :class "Publication"
+                                      :id 6110145 :value "1676470"})))
+    (is (= "https://pubmed.ncbi.nlm.nih.gov/1676470"
+           (utils/external-cell-link {:column "Publication.pubMedId" :class "Publication"
+                                      :value " 1676470 "}))
+        "surrounding spaces are trimmed")
+    (is (= "https://pubmed.ncbi.nlm.nih.gov/1676470"
+           (utils/external-cell-link {:column "Publication.pubMedId" :class "Publication"
+                                      :value 1676470}))
+        "a number is accepted"))
+  (testing "other columns of a Publication keep the report-page link"
+    (is (nil? (utils/external-cell-link {:column "DataSet.publication.title" :class "Publication"
+                                         :value "A paper"})))
+    (is (nil? (utils/external-cell-link {:column "DataSet.publication.year" :class "Publication"
+                                         :value 2006}))))
+  (testing "it goes by the attribute and class, not by what the value looks like"
+    (is (nil? (utils/external-cell-link {:column "Gene.primaryIdentifier" :class "Gene"
+                                         :value "16381927"})))
+    (is (nil? (utils/external-cell-link {:column "Thing.pubMedId" :class "Thing"
+                                         :value "16381927"})))
+    (is (nil? (utils/external-cell-link {:column "DataSet.publication.pubMedIdx"
+                                         :class "Publication" :value "16381927"}))))
+  (testing "an empty outer-join cell, a missing column or a non-numeric id: no PubMed link"
+    (is (nil? (utils/external-cell-link {:column "DataSet.publication.pubMedId" :class nil
+                                         :id nil :value nil})))
+    (is (nil? (utils/external-cell-link {:column "DataSet.publication.pubMedId"
+                                         :class "Publication" :value ""})))
+    (is (nil? (utils/external-cell-link {:class "Publication" :value "16381927"})))
+    (is (nil? (utils/external-cell-link {:column "DataSet.publication.pubMedId"
+                                         :class "Publication" :value "PMC123 x"})))
+    (is (nil? (utils/external-cell-link nil)))))

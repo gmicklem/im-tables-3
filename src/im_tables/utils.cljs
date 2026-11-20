@@ -172,3 +172,18 @@
   ([type] (default-list-name type (js/Date.)))
   ([type date]
    (str (name type) " List (" (format-list-name-date (js/Date. date)) ")")))
+
+(defn external-cell-link
+  "The URL outside the mine that a results-table cell links to instead of its report page,
+  or nil when the cell keeps the report-page link. `cell` is a cell of the mine's tablerows
+  results (keys :column, :class, :value), at the top level or inside an outer-join
+  sub-table. For now only the pubMedId attribute of a Publication, which links to PubMed
+  [im-9n4.61]. The decision goes by the attribute and class, not by the look of the value;
+  a value that is not a plain number gets no link."
+  [{:keys [column class value]}]
+  (let [id (some-> value str string/trim)]
+    (when (and (= "Publication" class)
+               (string? column)
+               (= "pubMedId" (last (string/split column #"\.")))
+               (some->> id (re-matches #"\d+")))
+      (str "https://pubmed.ncbi.nlm.nih.gov/" id))))
