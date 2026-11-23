@@ -40,11 +40,6 @@
                                 :value "AC3.1*" ;AC3*
                                 :code "A"}]})
 
-(def list-query {:title "esyN demo list"
-                 :from "Gene"
-                 :select ["Gene.secondaryIdentifier" "Gene.symbol" "Gene.primaryIdentifier" "Gene.organism.name"]
-                 :where [{:path "Gene", :op "IN", :value "esyN demo list"}]})
-
 (def default-db
   {;:service  {:root "www.humanmine.org/humanmine"}
    ;:query    {:from   "Gene"
@@ -56,7 +51,7 @@
    ;                    "homologues.homologue.symbol"]
    ;           :where  [{:path  "Gene"
    ;                     :op    "IN"
-   ;                     :value "esyN demo list"}
+   ;                     :value "PL FlyAtlas_brain_top"}
    ;                    {:path  "Gene.symbol"
    ;                     :op    "="
    ;                     :value "*a*"
